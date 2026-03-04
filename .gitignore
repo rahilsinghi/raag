@@ -54,3 +54,4 @@ backend/alembic/versions/__pycache__/
 # Misc
 *.log
 *.pid
+certs/

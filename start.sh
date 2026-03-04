@@ -144,7 +144,7 @@ echo -e "${CYAN}  Raag - Music Intelligence Platform${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 echo -e "  Backend:  ${GREEN}http://localhost:8000${NC}"
-echo -e "  Frontend: ${GREEN}http://localhost:3000${NC}"
+echo -e "  Frontend: ${GREEN}https://127.0.0.1:3000${NC}"
 echo -e "  API docs: ${GREEN}http://localhost:8000/docs${NC}"
 echo ""
 echo -e "  Press ${YELLOW}Ctrl+C${NC} to stop all services"
@@ -159,7 +159,7 @@ sleep 1
 
 # Start frontend
 log "Starting frontend..."
-(cd frontend && bun dev 2>&1 | sed 's/^/  [frontend] /') &
+(cd frontend && bun dev --experimental-https --experimental-https-key ../certs/key.pem --experimental-https-cert ../certs/cert.pem 2>&1 | sed 's/^/  [frontend] /') &
 FRONTEND_PID=$!
 
 # Wait for either to exit

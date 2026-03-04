@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 
 import anthropic
 from fastapi import APIRouter
@@ -151,13 +152,24 @@ async def chat(request: ChatRequest) -> ChatResponse:
 
     # Agentic loop: keep calling Claude until we get a final text response
     while True:
-        response = client.messages.create(
-            model=settings.claude_model,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            tools=TOOL_DEFINITIONS,
-            messages=messages,
-        )
+        # Retry with backoff on rate limit
+        for attempt in range(3):
+            try:
+                response = client.messages.create(
+                    model=settings.claude_model,
+                    max_tokens=4096,
+                    system=SYSTEM_PROMPT,
+                    tools=TOOL_DEFINITIONS,
+                    messages=messages,
+                )
+                break
+            except anthropic.RateLimitError:
+                if attempt < 2:
+                    wait = 2 ** attempt * 5  # 5s, 10s
+                    logger.warning("Rate limited, retrying in %ds...", wait)
+                    time.sleep(wait)
+                else:
+                    raise
 
         # Check if Claude wants to use tools
         tool_use_blocks = [b for b in response.content if b.type == "tool_use"]

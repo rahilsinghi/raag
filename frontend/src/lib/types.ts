@@ -15,6 +15,7 @@ export interface SongResult {
 export interface LyricResult {
   song_id: string;
   song_title: string;
+  album_title: string | null;
   text: string;
   chunk_type: string;
   section: string | null;

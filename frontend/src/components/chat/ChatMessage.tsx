@@ -1,24 +1,134 @@
 "use client";
 
 import Image from "next/image";
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import type { ChatMessage as ChatMessageType } from "@/lib/api";
+import type { ChatMessage as ChatMessageType, ToolResult } from "@/lib/api";
 import { SongCard } from "@/components/song/SongCard";
+import { LyricCard } from "@/components/song/LyricCard";
 import { BarAnnotation } from "@/components/song/BarAnnotation";
-import type { SongResult, BarResult } from "@/lib/types";
-import { User } from "lucide-react";
+import { SongContextCard } from "@/components/song/SongContextCard";
+import type { SongResult, LyricResult, BarResult, SongDetail } from "@/lib/types";
+import { User, Music, Quote, Mic2, FileText } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+
+const TOOL_META: Record<string, { label: string; Icon: LucideIcon }> = {
+  search_by_mood: { label: "Matching tracks", Icon: Music },
+  search_by_lyrics: { label: "Lyrics found", Icon: Quote },
+  search_bars: { label: "Bars", Icon: Mic2 },
+  get_song_context: { label: "Song details", Icon: FileText },
+};
+
+function renderToolResult(result: ToolResult): ReactNode {
+  const meta = TOOL_META[result.toolName];
+  const data = result.data;
+  const items = Array.isArray(data) ? data : null;
+
+  let sectionLabel: ReactNode = null;
+  if (meta && items && items.length > 0) {
+    const { Icon, label } = meta;
+    sectionLabel = (
+      <div className="flex items-center gap-2 mb-2.5">
+        <Icon className="w-3 h-3 text-white/20" />
+        <span className="text-[10px] font-semibold text-white/25 uppercase tracking-wider">
+          {label}
+        </span>
+        <div className="flex-1 h-px bg-white/[0.04]" />
+        <span className="text-[10px] text-white/15 tabular-nums">
+          {items.length}
+        </span>
+      </div>
+    );
+  }
+
+  let content: ReactNode = null;
+
+  switch (result.toolName) {
+    case "search_by_mood":
+      if (items) {
+        content = (
+          <div className="space-y-2.5">
+            {(items as SongResult[]).map((song, j) => (
+              <SongCard
+                key={song.id || `song-${j}`}
+                song={song}
+                rank={j + 1}
+                cascadeIndex={j}
+              />
+            ))}
+          </div>
+        );
+      }
+      break;
+
+    case "search_by_lyrics":
+      if (items) {
+        content = (
+          <div className="space-y-2.5">
+            {(items as LyricResult[]).map((lyric, j) => (
+              <LyricCard
+                key={`lyric-${lyric.song_id}-${j}`}
+                lyric={lyric}
+                rank={j + 1}
+                cascadeIndex={j}
+              />
+            ))}
+          </div>
+        );
+      }
+      break;
+
+    case "search_bars":
+      if (items) {
+        content = (
+          <div className="space-y-2">
+            {(items as BarResult[]).map((bar, j) => (
+              <BarAnnotation
+                key={bar.id || `bar-${j}`}
+                bar={bar}
+                cascadeIndex={j}
+              />
+            ))}
+          </div>
+        );
+      }
+      break;
+
+    case "get_song_context":
+      if (data && !Array.isArray(data)) {
+        content = (
+          <SongContextCard song={data as SongDetail} cascadeIndex={0} />
+        );
+      }
+      break;
+  }
+
+  if (!sectionLabel && !content) return null;
+
+  return (
+    <>
+      {sectionLabel}
+      {content}
+    </>
+  );
+}
 
 interface Props {
   message: ChatMessageType;
+  index?: number;
 }
 
-export function ChatMessage({ message }: Props) {
+export function ChatMessage({ message, index = 0 }: Props) {
   const isUser = message.role === "user";
+  const staggerDelay = `${Math.min(index * 0.05, 0.3)}s`;
 
   if (isUser) {
     return (
-      <div className="flex items-start gap-3 justify-end animate-fade-in-up">
+      <div
+        className="flex items-start gap-3 justify-end animate-fade-in-up"
+        style={{ animationDelay: staggerDelay }}
+      >
         <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-white/[0.06] border border-white/[0.08] px-4 py-2.5">
           <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
             {message.content}
@@ -32,7 +142,10 @@ export function ChatMessage({ message }: Props) {
   }
 
   return (
-    <div className="flex items-start gap-3 animate-fade-in-up">
+    <div
+      className="flex items-start gap-3 animate-fade-in-up"
+      style={{ animationDelay: staggerDelay }}
+    >
       <div className="relative w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10 shrink-0 mt-0.5">
         <Image
           src="/logos/Artboard 4SM logos.png"
@@ -42,7 +155,6 @@ export function ChatMessage({ message }: Props) {
         />
       </div>
       <div className="flex-1 min-w-0">
-        {/* Markdown content */}
         {message.content && (
           <div className="prose-chat">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -51,33 +163,9 @@ export function ChatMessage({ message }: Props) {
           </div>
         )}
 
-        {/* Tool results */}
         {message.toolResults?.map((result, i) => (
-          <div key={`tool-${i}-${result.toolName}`} className="mt-4 space-y-2.5">
-            {(result.toolName === "search_by_mood" ||
-              result.toolName === "search_by_lyrics") &&
-              Array.isArray(result.data) && (
-                <div className="space-y-2.5">
-                  {(result.data as SongResult[]).map((song, j) => (
-                    <SongCard
-                      key={song.id || `song-${j}`}
-                      song={song}
-                      rank={j + 1}
-                    />
-                  ))}
-                </div>
-              )}
-            {result.toolName === "search_bars" &&
-              Array.isArray(result.data) && (
-                <div className="space-y-2">
-                  {(result.data as BarResult[]).map((bar, j) => (
-                    <BarAnnotation
-                      key={bar.id || `bar-${j}`}
-                      bar={bar}
-                    />
-                  ))}
-                </div>
-              )}
+          <div key={`tool-${i}-${result.toolName}`} className="mt-4">
+            {renderToolResult(result)}
           </div>
         ))}
       </div>

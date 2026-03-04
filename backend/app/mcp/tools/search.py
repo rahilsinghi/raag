@@ -99,6 +99,7 @@ async def search_by_lyrics(
         lyric_results.append({
             "song_id": song_id or "",
             "song_title": song_title,
+            "album_title": song_info["album_title"] if song_info else None,
             "text": payload.get("text", ""),
             "chunk_type": payload.get("chunk_type", ""),
             "section": payload.get("section"),

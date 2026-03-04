@@ -65,12 +65,11 @@ function renderToolResult(result: ToolResult): ReactNode {
     case "search_by_lyrics":
       if (items) {
         content = (
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {(items as LyricResult[]).map((lyric, j) => (
               <LyricCard
                 key={`lyric-${lyric.song_id}-${j}`}
                 lyric={lyric}
-                rank={j + 1}
                 cascadeIndex={j}
               />
             ))}

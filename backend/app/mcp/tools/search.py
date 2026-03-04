@@ -94,12 +94,13 @@ async def search_by_lyrics(
         song_id = payload.get("song_id")
 
         song_info = await _enrich_song(song_id) if song_id else None
-        song_title = song_info["title"] if song_info else "Unknown"
+        if not song_info:
+            continue  # Skip orphaned Qdrant entries
 
         lyric_results.append({
             "song_id": song_id or "",
-            "song_title": song_title,
-            "album_title": song_info["album_title"] if song_info else None,
+            "song_title": song_info["title"],
+            "album_title": song_info["album_title"],
             "text": payload.get("text", ""),
             "chunk_type": payload.get("chunk_type", ""),
             "section": payload.get("section"),

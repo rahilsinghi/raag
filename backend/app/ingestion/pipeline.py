@@ -29,6 +29,7 @@ from app.ml.lyrics.chunker import LyricsChunker
 from app.ml.lyrics.embedder import LyricsEmbedder
 from app.ml.nlp.bar_annotator import BarAnnotator
 from app.ml.nlp.entity_extractor import EntityExtractor
+from app.ml.nlp.rhyme_annotator import RhymeAnnotator
 from app.ml.nlp.topic_classifier import TopicClassifier
 
 logger = logging.getLogger(__name__)
@@ -410,6 +411,26 @@ class IngestionPipeline:
                                 bar.punchline_explanation = ann.get("punchline_explanation")
                                 bar.reference_target = ann.get("reference_target")
                                 bar.rhyme_group = ann.get("rhyme_group")
+
+            # Word-level rhyme annotation
+            time.sleep(1)
+            try:
+                rhyme_annotator = RhymeAnnotator()
+                rhyme_results = rhyme_annotator.annotate_bars(song.title, bar_texts)
+
+                async with async_session() as session:
+                    async with session.begin():
+                        for rann in rhyme_results:
+                            idx = rann.get("bar_index")
+                            if idx is not None and idx < len(bars):
+                                result = await session.execute(
+                                    select(Bar).where(Bar.id == bars[idx].id)
+                                )
+                                bar = result.scalar_one()
+                                bar.rhyme_words = rann.get("rhyme_words", [])
+                logger.info("Rhyme annotation complete for song_id=%s", song_id)
+            except Exception as e:
+                logger.error("Rhyme annotation failed for song_id=%s: %s", song_id, e)
 
             logger.info("NLP processing complete for song_id=%s", song_id)
         except Exception as e:

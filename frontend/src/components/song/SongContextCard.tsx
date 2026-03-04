@@ -14,8 +14,10 @@ import {
   Type,
   ChevronDown,
   Users,
+  AlignLeft,
 } from "lucide-react";
 import { PlayButton } from "@/components/spotify/PlayButton";
+import { RhymeSheetPanel } from "@/components/rhyme/RhymeSheetPanel";
 
 interface Props {
   song: SongDetail;
@@ -24,6 +26,7 @@ interface Props {
 
 export function SongContextCard({ song, cascadeIndex = 0 }: Props) {
   const [showLyrics, setShowLyrics] = useState(false);
+  const [showRhymeSheet, setShowRhymeSheet] = useState(false);
   const energyPct = song.energy ? Math.round(song.energy * 100) : 0;
   const albumArt = getAlbumArt(song.album_title || "");
 
@@ -62,7 +65,7 @@ export function SongContextCard({ song, cascadeIndex = 0 }: Props) {
             <h3 className="font-bold text-base text-white truncate">
               {song.title}
             </h3>
-            <PlayButton spotifyTrackId={song.spotify_track_id} size="md" />
+            <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="md" />
           </div>
           <p className="text-xs text-white/40 mt-0.5">
             {song.album_title}
@@ -161,6 +164,27 @@ export function SongContextCard({ song, cascadeIndex = 0 }: Props) {
             </Badge>
           ))}
         </div>
+      )}
+
+      {/* Rhyme sheet button */}
+      {song.bars && song.bars.length > 0 && (
+        <div className="border-t border-white/[0.04]">
+          <button
+            onClick={() => setShowRhymeSheet((v) => !v)}
+            className="w-full px-4 py-2 flex items-center gap-2 text-xs text-white/30 hover:text-[#d91d1c]/70 transition-colors"
+          >
+            <AlignLeft className="w-3.5 h-3.5" />
+            <span>{showRhymeSheet ? "Hide Rhyme Sheet" : "View Rhyme Sheet"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Rhyme sheet panel */}
+      {showRhymeSheet && (
+        <RhymeSheetPanel
+          songId={song.id}
+          onClose={() => setShowRhymeSheet(false)}
+        />
       )}
 
       {/* Lyrics preview (collapsible) */}

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { toast } from "sonner";
 import {
   getSpotifyAuthUrl,
   refreshSpotifyToken,
@@ -20,6 +21,15 @@ interface SpotifyState {
   player: Spotify.Player | null;
   sdkReady: boolean;
 
+  // Track info (event-driven from SDK)
+  currentTrackInfo: { name: string; artist: string; albumArt: string } | null;
+  currentSongDbId: string | null; // DB song ID for the currently playing track
+
+  // Playback position (for lyric sync)
+  playbackPosition: number; // ms
+  playbackDuration: number; // ms
+  _positionTimestamp: number; // Date.now() when position was last updated
+
   // Matching
   isMatching: boolean;
   matchCount: number;
@@ -32,11 +42,14 @@ interface SpotifyState {
   setPlayer: (player: Spotify.Player | null) => void;
   setDeviceId: (id: string | null) => void;
   setSdkReady: (ready: boolean) => void;
-  play: (spotifyUri: string) => Promise<void>;
+  play: (spotifyUri: string, songDbId?: string) => Promise<void>;
   pause: () => Promise<void>;
   resume: () => Promise<void>;
   setCurrentTrack: (id: string | null) => void;
   setIsPlaying: (playing: boolean) => void;
+  setCurrentTrackInfo: (info: { name: string; artist: string; albumArt: string } | null) => void;
+  setPlaybackPosition: (position: number, duration: number) => void;
+  getInterpolatedPosition: () => number;
   matchSongs: () => Promise<void>;
 }
 
@@ -53,6 +66,12 @@ export const useSpotifyStore = create<SpotifyState>()(
       deviceId: null,
       player: null,
       sdkReady: false,
+      currentTrackInfo: null,
+      currentSongDbId: null,
+
+      playbackPosition: 0,
+      playbackDuration: 0,
+      _positionTimestamp: 0,
 
       isMatching: false,
       matchCount: 0,
@@ -86,6 +105,7 @@ export const useSpotifyStore = create<SpotifyState>()(
           deviceId: null,
           player: null,
           sdkReady: false,
+          currentTrackInfo: null,
         });
       },
 
@@ -104,6 +124,7 @@ export const useSpotifyStore = create<SpotifyState>()(
             });
             return data.access_token;
           } catch {
+            toast.error("Spotify session expired — please reconnect");
             set({ isAuthenticated: false, accessToken: null });
             return null;
           }
@@ -116,8 +137,16 @@ export const useSpotifyStore = create<SpotifyState>()(
       setSdkReady: (ready) => set({ sdkReady: ready }),
       setCurrentTrack: (id) => set({ currentTrackId: id }),
       setIsPlaying: (playing) => set({ isPlaying: playing }),
+      setCurrentTrackInfo: (info) => set({ currentTrackInfo: info }),
+      setPlaybackPosition: (position, duration) =>
+        set({ playbackPosition: position, playbackDuration: duration, _positionTimestamp: Date.now() }),
+      getInterpolatedPosition: () => {
+        const { playbackPosition, _positionTimestamp, isPlaying } = get();
+        if (!isPlaying) return playbackPosition;
+        return playbackPosition + (Date.now() - _positionTimestamp);
+      },
 
-      play: async (spotifyUri: string) => {
+      play: async (spotifyUri: string, songDbId?: string) => {
         const token = await get().getValidToken();
         const { deviceId } = get();
         if (!token || !deviceId) return;
@@ -133,7 +162,7 @@ export const useSpotifyStore = create<SpotifyState>()(
             body: JSON.stringify({ uris: [spotifyUri] }),
           }
         );
-        set({ isPlaying: true, currentTrackId: spotifyUri });
+        set({ isPlaying: true, currentTrackId: spotifyUri, currentSongDbId: songDbId ?? null });
       },
 
       pause: async () => {
@@ -164,6 +193,7 @@ export const useSpotifyStore = create<SpotifyState>()(
           const results = await matchAllSongsToSpotify(token);
           const matched = results.filter((r) => r.matched).length;
           set({ matchCount: matched });
+          toast.success(`Matched ${matched} songs to Spotify`);
         } finally {
           set({ isMatching: false });
         }

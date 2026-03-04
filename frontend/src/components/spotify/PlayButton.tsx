@@ -5,12 +5,14 @@ import { useSpotifyStore } from "@/lib/spotify-store";
 
 interface PlayButtonProps {
   spotifyTrackId: string | null;
+  songId?: string;
   size?: "sm" | "md";
   className?: string;
 }
 
 export function PlayButton({
   spotifyTrackId,
+  songId,
   size = "sm",
   className = "",
 }: PlayButtonProps) {
@@ -38,7 +40,7 @@ export function PlayButton({
     if (isThisPlaying) {
       pause();
     } else {
-      play(uri);
+      play(uri, songId);
     }
   };
 

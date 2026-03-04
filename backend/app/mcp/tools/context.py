@@ -74,6 +74,9 @@ async def get_song_context(song_id: str) -> dict | None:
                 "punchline_explanation": b.punchline_explanation,
                 "reference_target": b.reference_target,
                 "rhyme_group": b.rhyme_group,
+                "rhyme_words": b.rhyme_words,
+                "start_ms": b.start_ms,
+                "end_ms": b.end_ms,
             }
             for b in bars_sorted
         ],

@@ -114,7 +114,7 @@ export function SongCard({ song, rank, cascadeIndex = 0 }: Props) {
                     <h4 className="font-bold text-sm text-white truncate">
                       {song.title}
                     </h4>
-                    <PlayButton spotifyTrackId={song.spotify_track_id} size="sm" />
+                    <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
                   </div>
                   <p className="text-xs text-white/40 mt-0.5">
                     {song.album_title}

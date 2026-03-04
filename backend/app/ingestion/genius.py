@@ -87,6 +87,13 @@ class GeniusClient:
         logger.info("Fetched %d songs from '%s'", len(songs), album_name)
         return songs
 
+    def fetch_song_lyrics(self, artist_name: str, song_title: str) -> str | None:
+        """Search for a single song on Genius and return its raw lyrics text."""
+        song = self.genius.search_song(song_title, artist_name)
+        if song is None:
+            return None
+        return song.lyrics or None
+
     def _parse_song(self, song: lyricsgenius.types.Song) -> dict:
         """Extract structured data from a Genius Song object."""
         raw_lyrics = song.lyrics or ""

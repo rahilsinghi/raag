@@ -90,7 +90,14 @@ class CLAPEncoder:
             with torch.no_grad():
                 audio_embed = self._model.get_audio_features(**inputs)
 
-            embeddings.append(audio_embed.cpu().numpy().squeeze())
+            # Handle both tensor and BaseModelOutputWithPooling returns
+            if hasattr(audio_embed, "cpu"):
+                embed_np = audio_embed.cpu().numpy().squeeze()
+            else:
+                # Newer transformers returns a model output object
+                embed_tensor = audio_embed.pooler_output if hasattr(audio_embed, "pooler_output") else audio_embed[0]
+                embed_np = embed_tensor.cpu().numpy().squeeze()
+            embeddings.append(embed_np)
 
         # Average across chunks
         mean_embedding = np.mean(embeddings, axis=0)
@@ -120,7 +127,12 @@ class CLAPEncoder:
         with torch.no_grad():
             text_embed = self._model.get_text_features(**inputs)
 
-        embedding = text_embed.cpu().numpy().squeeze()
+        # Handle both tensor and BaseModelOutputWithPooling returns
+        if hasattr(text_embed, "cpu"):
+            embedding = text_embed.cpu().numpy().squeeze()
+        else:
+            embed_tensor = text_embed.pooler_output if hasattr(text_embed, "pooler_output") else text_embed[0]
+            embedding = embed_tensor.cpu().numpy().squeeze()
 
         # L2 normalize
         norm = np.linalg.norm(embedding)

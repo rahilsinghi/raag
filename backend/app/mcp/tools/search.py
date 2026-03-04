@@ -18,7 +18,7 @@ async def _enrich_song(song_id: str) -> dict | None:
             .options(selectinload(Song.album).selectinload(Album.artist))
             .where(Song.id == song_id)
         )
-        song = result.scalar_one_or_none()
+        song = result.scalars().first()
         if not song:
             return None
         return {
@@ -136,9 +136,9 @@ async def search_bars(
                 select(Bar).where(
                     Bar.song_id == song_id,
                     Bar.text == payload.get("text", ""),
-                )
+                ).limit(1)
             )
-            bar = result.scalar_one_or_none()
+            bar = result.scalars().first()
 
         if bar:
             if annotation_type and (not bar.annotations or annotation_type not in bar.annotations):

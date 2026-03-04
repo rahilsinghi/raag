@@ -31,6 +31,9 @@ const SUGGESTIONS = [
   },
 ];
 
+// Double the albums for seamless infinite scroll
+const CAROUSEL_ALBUMS = [...FEATURED_ALBUMS, ...FEATURED_ALBUMS];
+
 export function ChatContainer() {
   const { messages, isLoading, sendMessage } = useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -44,16 +47,20 @@ export function ChatContainer() {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center min-h-[70vh]">
-            {/* Album art carousel */}
+            {/* Album art carousel - auto-scrolling */}
             <div className="w-full mb-12 overflow-hidden scroll-mask">
-              <div className="flex gap-3 justify-center">
-                {FEATURED_ALBUMS.map((album) => {
+              <div className="flex gap-3 animate-carousel w-max">
+                {CAROUSEL_ALBUMS.map((album, idx) => {
                   const artFile = ALBUM_ART[album.slug];
                   if (!artFile) return null;
                   return (
                     <div
-                      key={album.slug}
-                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 album-art-hover group"
+                      key={`${album.slug}-${idx}`}
+                      className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-xl overflow-hidden shrink-0 album-art-hover group animate-float"
+                      style={{
+                        animationDelay: `${(idx % FEATURED_ALBUMS.length) * 0.5}s`,
+                        animationDuration: `${3.5 + (idx % 3) * 0.5}s`,
+                      }}
                     >
                       <Image
                         src={`/albums/${artFile}`}
@@ -82,16 +89,18 @@ export function ChatContainer() {
               Artist Intelligence Engine
             </p>
             <p className="text-sm text-white/35 max-w-sm text-center mb-10 leading-relaxed animate-text-appear [animation-delay:0.2s]">
-              Explore Seedhe Maut&apos;s music through moods, lyrics, bars, and references.
+              Explore Seedhe Maut&apos;s music through moods, lyrics, bars, and
+              references.
             </p>
 
             {/* Suggestion cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg animate-text-appear [animation-delay:0.3s]">
-              {SUGGESTIONS.map((s) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-lg">
+              {SUGGESTIONS.map((s, i) => (
                 <button
                   key={s.text}
                   onClick={() => sendMessage(s.text)}
-                  className="group flex items-start gap-3 p-3.5 rounded-xl glass-card cursor-pointer text-left"
+                  className="group flex items-start gap-3 p-3.5 rounded-xl glass-card suggestion-card cursor-pointer text-left animate-text-appear"
+                  style={{ animationDelay: `${0.3 + i * 0.08}s` }}
                 >
                   <s.icon
                     className={`w-4 h-4 ${s.color} group-hover:text-[#d91d1c] transition-colors mt-0.5 shrink-0`}
@@ -106,7 +115,7 @@ export function ChatContainer() {
         ) : (
           <div className="space-y-6">
             {messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
+              <ChatMessage key={index} message={message} index={index} />
             ))}
 
             {isLoading && (

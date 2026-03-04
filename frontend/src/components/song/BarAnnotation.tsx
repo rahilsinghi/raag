@@ -7,6 +7,7 @@ import { ChevronDown } from "lucide-react";
 
 interface Props {
   bar: BarResult;
+  cascadeIndex?: number;
 }
 
 const MC_STYLES: Record<
@@ -39,7 +40,7 @@ const ANNOTATION_STYLES: Record<
   key_bar: { bg: "bg-orange-500/10", text: "text-orange-400/90" },
 };
 
-export function BarAnnotation({ bar }: Props) {
+export function BarAnnotation({ bar, cascadeIndex = 0 }: Props) {
   const [expanded, setExpanded] = useState(false);
   const mc = MC_STYLES[bar.mc ?? ""];
   const hasDetail = bar.punchline_explanation || bar.reference_target;
@@ -47,11 +48,12 @@ export function BarAnnotation({ bar }: Props) {
 
   return (
     <div
-      className={`rounded-lg border transition-all duration-300 ${
+      className={`rounded-lg border transition-all duration-300 animate-cascade-in ${
         hasAnnotations
           ? `${mc?.border || "border-[#d91d1c]/15"} ${mc?.bg || "bg-[#d91d1c]/[0.03]"}`
           : "border-white/[0.04] bg-white/[0.01]"
       } ${hasDetail ? "cursor-pointer hover:border-white/[0.12]" : ""}`}
+      style={{ animationDelay: `${cascadeIndex * 0.06}s` }}
       onClick={() => hasDetail && setExpanded(!expanded)}
     >
       <div className="px-3 py-2.5">

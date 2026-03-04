@@ -6,6 +6,7 @@ import { ArrowUp } from "lucide-react";
 
 export function ChatInput() {
   const [input, setInput] = useState("");
+  const [ripple, setRipple] = useState(false);
   const { sendMessage, isLoading } = useChatStore();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -16,9 +17,15 @@ export function ChatInput() {
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, []);
 
+  const triggerRipple = useCallback(() => {
+    setRipple(true);
+    setTimeout(() => setRipple(false), 500);
+  }, []);
+
   const handleSubmit = async () => {
     const trimmed = input.trim();
     if (!trimmed || isLoading) return;
+    triggerRipple();
     setInput("");
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
@@ -57,9 +64,10 @@ export function ChatInput() {
           <button
             onClick={handleSubmit}
             disabled={!canSend}
-            className="m-1.5 p-2 rounded-lg bg-[#d91d1c] text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-[#ef2e2d] active:scale-95 transition-all duration-200 shrink-0 shadow-[0_0_20px_rgba(217,29,28,0.3)]"
+            className="ripple-effect m-1.5 p-2 rounded-lg bg-[#d91d1c] text-white disabled:opacity-20 disabled:cursor-not-allowed hover:bg-[#ef2e2d] active:scale-95 transition-all duration-200 shrink-0 shadow-[0_0_20px_rgba(217,29,28,0.3)]"
           >
-            <ArrowUp className="w-4 h-4" />
+            {ripple && <span className="ripple" />}
+            <ArrowUp className="w-4 h-4 relative z-10" />
           </button>
         </div>
         <p className="text-[10px] text-white/15 text-center mt-2 tracking-wide">

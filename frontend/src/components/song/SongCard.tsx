@@ -9,6 +9,7 @@ import { getAlbumArt } from "@/lib/album-art";
 interface Props {
   song: SongResult;
   rank?: number;
+  cascadeIndex?: number;
 }
 
 const TOPIC_COLORS: Record<string, string> = {
@@ -25,13 +26,16 @@ const TOPIC_COLORS: Record<string, string> = {
     "bg-yellow-500/10 text-yellow-400/90 border-yellow-500/15",
 };
 
-export function SongCard({ song, rank }: Props) {
+export function SongCard({ song, rank, cascadeIndex = 0 }: Props) {
   const energyPct = song.energy ? Math.round(song.energy * 100) : 0;
   const scorePct = Math.round(song.score * 100);
   const albumArt = getAlbumArt(song.album_title || "");
 
   return (
-    <div className="group glass-card rounded-xl overflow-hidden animate-scale-in">
+    <div
+      className="group glass-card rounded-xl overflow-hidden animate-cascade-in"
+      style={{ animationDelay: `${cascadeIndex * 0.08}s` }}
+    >
       <div className="px-4 py-3">
         <div className="flex items-start gap-3">
           {/* Album art thumbnail */}

@@ -82,6 +82,8 @@ class Song(TimestampMixin, Base):
     mood_energy: Mapped[float | None] = mapped_column(Float, nullable=True)
     primary_topics: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
     secondary_tags: Mapped[list[str] | None] = mapped_column(ARRAY(Text), nullable=True)
+    spotify_track_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    spotify_preview_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
     album: Mapped["Album"] = relationship(back_populates="songs")

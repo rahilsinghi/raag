@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     lyrics_embed_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
     zero_shot_model: str = "facebook/bart-large-mnli"
     claude_model: str = "claude-sonnet-4-20250514"
+    spotify_client_id: str = ""
+    spotify_client_secret: str = ""
+    spotify_redirect_uri: str = "https://127.0.0.1:3000/api/auth/callback/spotify"
 
     model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8"}
 

@@ -32,6 +32,7 @@ async def _enrich_song(song_id: str) -> dict | None:
             "mood_energy": song.mood_energy,
             "primary_topics": song.primary_topics or [],
             "secondary_tags": song.secondary_tags or [],
+            "spotify_track_id": song.spotify_track_id,
         }
 
 

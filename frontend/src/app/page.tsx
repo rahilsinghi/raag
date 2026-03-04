@@ -5,7 +5,12 @@ import Image from "next/image";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChatStore } from "@/lib/store";
-import { RotateCcw } from "lucide-react";
+import Link from "next/link";
+import { RotateCcw, Network } from "lucide-react";
+import { SpotifySDK } from "@/components/spotify/SpotifySDK";
+import { SpotifyCallback } from "@/components/spotify/SpotifyCallback";
+import { SpotifyMiniPlayer } from "@/components/spotify/SpotifyMiniPlayer";
+import { SpotifyLoginButton } from "@/components/spotify/SpotifyLoginButton";
 
 export default function Home() {
   const { messages, clearMessages } = useChatStore();
@@ -66,6 +71,11 @@ export default function Home() {
         </div>
       )}
 
+      {/* Spotify */}
+      <SpotifySDK />
+      <SpotifyCallback />
+      <SpotifyMiniPlayer />
+
       {/* Noise texture overlay */}
       <div className="noise-overlay" />
 
@@ -107,6 +117,14 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-2">
+          <SpotifyLoginButton />
+          <Link
+            href="/universe"
+            className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+            title="Universe Map"
+          >
+            <Network className="w-3.5 h-3.5" />
+          </Link>
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06]">
             <div className="w-1.5 h-1.5 rounded-full bg-[#d91d1c] animate-heartbeat" />
             <span className="text-[11px] text-white/50 font-semibold tracking-wide uppercase">

@@ -9,6 +9,7 @@ export interface SongResult {
   mood_energy: number | null;
   primary_topics: string[];
   secondary_tags: string[];
+  spotify_track_id: string | null;
   score: number;
 }
 
@@ -41,6 +42,7 @@ export interface SongDetail {
   id: string;
   title: string;
   album_title: string;
+  release_year: number | null;
   track_number: number | null;
   duration_seconds: number | null;
   tempo_bpm: number | null;
@@ -49,6 +51,7 @@ export interface SongDetail {
   mood_energy: number | null;
   primary_topics: string[];
   secondary_tags: string[];
+  spotify_track_id: string | null;
   lyrics_text: string | null;
   word_count: number | null;
   unique_word_count: number | null;
@@ -68,4 +71,58 @@ export interface EntityMention {
 export interface FeatureArtist {
   artist_name: string;
   role: string | null;
+}
+
+// --- Graph types ---
+
+export interface GraphNodeData {
+  id: string;
+  type: string;
+  label: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface GraphEdgeData {
+  source: string;
+  target: string;
+  type: string;
+  metadata: Record<string, unknown>;
+}
+
+export interface GraphDataResponse {
+  nodes: GraphNodeData[];
+  edges: GraphEdgeData[];
+  stats: Record<string, number>;
+}
+
+// --- Spotify types ---
+
+export interface SpotifyTrack {
+  spotify_id: string;
+  name: string;
+  artists: string[];
+  album_name: string;
+  album_art_url: string | null;
+  preview_url: string | null;
+  external_url: string;
+  duration_ms: number;
+}
+
+export interface SpotifyTokens {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number; // timestamp ms
+}
+
+export interface BarDescription {
+  bar_id: string;
+  text: string;
+  translation: string | null;
+  meaning: string;
+  wordplay: string | null;
+  cultural_references: string[];
+  flow_notes: string | null;
+  song_context: string | null;
+  tldr: string;
 }

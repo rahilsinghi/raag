@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { toast } from "sonner";
 import { fetchGraphData, refreshGraphData } from "./api";
 import type { GraphNodeData, GraphEdgeData } from "./types";
 
@@ -45,6 +46,7 @@ export const useUniverseStore = create<UniverseStore>((set, get) => ({
       set({ nodes: data.nodes, edges: data.edges, stats: data.stats });
     } catch (e) {
       console.error("Failed to fetch graph:", e);
+      toast.error("Failed to load graph data");
     } finally {
       set({ isLoading: false });
     }
@@ -56,8 +58,10 @@ export const useUniverseStore = create<UniverseStore>((set, get) => ({
       await refreshGraphData();
       const data = await fetchGraphData({ view_mode: get().viewMode });
       set({ nodes: data.nodes, edges: data.edges, stats: data.stats });
+      toast.success("Graph refreshed");
     } catch (e) {
       console.error("Failed to refresh graph:", e);
+      toast.error("Failed to refresh graph");
     } finally {
       set({ isLoading: false });
     }

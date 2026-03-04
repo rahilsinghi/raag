@@ -20,6 +20,8 @@ export function SpotifySDK() {
     setDeviceId,
     setIsPlaying,
     setCurrentTrack,
+    setCurrentTrackInfo,
+    setPlaybackPosition,
     getValidToken,
   } = useSpotifyStore();
 
@@ -84,12 +86,19 @@ export function SpotifySDK() {
       (state: Spotify.PlaybackState | null) => {
         if (!state) {
           setIsPlaying(false);
+          setCurrentTrackInfo(null);
           return;
         }
         setIsPlaying(!state.paused);
+        setPlaybackPosition(state.position, state.duration);
         const track = state.track_window.current_track;
         if (track) {
           setCurrentTrack(`spotify:track:${track.id}`);
+          setCurrentTrackInfo({
+            name: track.name,
+            artist: track.artists.map((a) => a.name).join(", "),
+            albumArt: track.album.images[0]?.url || "",
+          });
         }
       }
     );
@@ -112,6 +121,8 @@ export function SpotifySDK() {
     setDeviceId,
     setIsPlaying,
     setCurrentTrack,
+    setCurrentTrackInfo,
+    setPlaybackPosition,
     getValidToken,
   ]);
 

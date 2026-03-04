@@ -50,7 +50,7 @@ export function TimelineView() {
   }, [nodes, edges]);
 
   return (
-    <div className="fixed inset-0 bg-[#050505] z-10 pt-16 overflow-x-auto overflow-y-hidden">
+    <div className="fixed inset-0 bg-[#050505] z-10 pt-16 overflow-x-auto overflow-y-hidden scroll-mask">
       <div className="relative h-full min-w-[1200px] px-12 flex flex-col justify-center">
         {/* Center timeline line */}
         <div className="absolute left-8 right-8 top-1/2 h-px bg-white/10" />

@@ -58,7 +58,7 @@ export function ChatInput() {
             placeholder="Ask about Seedhe Maut's music..."
             disabled={isLoading}
             rows={1}
-            className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/20 resize-none outline-none disabled:opacity-50 max-h-40"
+            className="flex-1 bg-transparent px-4 py-3 text-sm text-white placeholder:text-white/20 resize-none outline-none disabled:opacity-40 disabled:cursor-not-allowed max-h-40"
             autoFocus
           />
           <button

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { useSpotifyStore } from "@/lib/spotify-store";
 
 export function SpotifyCallback() {
@@ -31,6 +32,7 @@ export function SpotifyCallback() {
 
     // Store tokens
     setTokens(accessToken, refreshToken, parseInt(expiresIn, 10));
+    toast.success("Spotify connected");
 
     // Auto-match songs in background
     matchSongs();

@@ -32,47 +32,70 @@ export function NodeDetailPanel() {
   const { selectedNode, selectNode, clickScreenPos } = useUniverseStore();
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const [visible, setVisible] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [displayedNode, setDisplayedNode] = useState(selectedNode);
 
-  // Recompute position whenever clickScreenPos or selectedNode changes
+  // ESC key dismisses panel
   useEffect(() => {
-    if (!selectedNode || !clickScreenPos) {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && selectedNode) selectNode(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedNode, selectNode]);
+
+  // Handle open/close with exit animation
+  useEffect(() => {
+    if (selectedNode && clickScreenPos) {
+      setClosing(false);
+      setDisplayedNode(selectedNode);
+
+      const bubbleW = 288;
+      const bubbleH = 260;
+      let x = clickScreenPos.x + 24;
+      let y = clickScreenPos.y - 60;
+
+      if (typeof window !== "undefined") {
+        if (x + bubbleW > window.innerWidth - 16) x = clickScreenPos.x - bubbleW - 24;
+        if (y + bubbleH > window.innerHeight - 16) y = window.innerHeight - bubbleH - 16;
+        if (y < 64) y = 64;
+        if (x < 16) x = 16;
+      }
+
+      setPos({ top: y, left: x });
+      setVisible(true);
+    } else if (visible) {
+      // Trigger exit animation
+      setClosing(true);
+    }
+  }, [selectedNode, clickScreenPos, visible]);
+
+  const handleAnimationEnd = () => {
+    if (closing) {
       setVisible(false);
+      setClosing(false);
+      setDisplayedNode(null);
       setPos(null);
-      return;
     }
+  };
 
-    const bubbleW = 288;
-    const bubbleH = 260;
-    let x = clickScreenPos.x + 24;
-    let y = clickScreenPos.y - 60;
+  if (!displayedNode || !pos || !visible) return null;
 
-    // Clamp so the card stays on-screen
-    if (typeof window !== "undefined") {
-      if (x + bubbleW > window.innerWidth - 16) x = clickScreenPos.x - bubbleW - 24;
-      if (y + bubbleH > window.innerHeight - 16) y = window.innerHeight - bubbleH - 16;
-      if (y < 64) y = 64;
-      if (x < 16) x = 16;
-    }
-
-    setPos({ top: y, left: x });
-    setVisible(true);
-  }, [selectedNode, clickScreenPos]);
-
-  if (!selectedNode || !pos || !visible) return null;
-
-  const Icon = TYPE_ICONS[selectedNode.type] || Tag;
-  const color = NODE_COLORS[selectedNode.type] || "#ffffff";
-  const meta = selectedNode.metadata;
+  const node = displayedNode;
+  const Icon = TYPE_ICONS[node.type] || Tag;
+  const color = NODE_COLORS[node.type] || "#ffffff";
+  const meta = node.metadata;
   const summary = (meta.summary as string) || null;
 
   return (
     <div
-      className="fixed z-40 w-[280px] animate-scale-in pointer-events-auto"
+      className={`fixed z-40 w-[280px] pointer-events-auto ${closing ? "animate-scale-out" : "animate-scale-in"}`}
       style={{
         top: pos.top,
         left: pos.left,
         transformOrigin: "top left",
       }}
+      onAnimationEnd={handleAnimationEnd}
     >
       <div
         className="rounded-2xl border p-4 space-y-3 shadow-2xl backdrop-blur-xl"
@@ -96,15 +119,16 @@ export function NodeDetailPanel() {
                 className="text-[9px] uppercase tracking-[0.15em] font-bold"
                 style={{ color }}
               >
-                {TYPE_LABELS[selectedNode.type] || selectedNode.type}
+                {TYPE_LABELS[node.type] || node.type}
               </p>
               <div className="flex items-center gap-2">
                 <h3 className="text-[13px] font-bold text-white leading-tight truncate">
-                  {selectedNode.label}
+                  {node.label}
                 </h3>
-                {selectedNode.type === "song" && (
+                {node.type === "song" && (
                   <PlayButton
                     spotifyTrackId={(meta.spotify_track_id as string) || null}
+                    songId={node.id.replace(/^song-/, "")}
                     size="sm"
                   />
                 )}
@@ -120,7 +144,7 @@ export function NodeDetailPanel() {
         </div>
 
         {/* Quick stats */}
-        <QuickStats type={selectedNode.type} meta={meta} color={color} />
+        <QuickStats type={node.type} meta={meta} color={color} />
 
         {/* Trivia */}
         {summary && (
@@ -128,7 +152,7 @@ export function NodeDetailPanel() {
         )}
 
         {/* Topic badges */}
-        {selectedNode.type === "song" &&
+        {node.type === "song" &&
           (meta.primary_topics as string[])?.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {(meta.primary_topics as string[]).slice(0, 4).map((t) => (

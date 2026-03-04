@@ -47,6 +47,7 @@
   --font-sans: var(--font-inter);
   --font-display: "KinetikaMaut", sans-serif;
   --font-body: "TTCommonsPro", var(--font-inter), sans-serif;
+  --font-devanagari: var(--font-devanagari), "Noto Sans Devanagari", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -387,6 +388,48 @@
   animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+@keyframes scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+.animate-scale-out {
+  animation: scale-out 0.25s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+@keyframes slide-up-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-slide-up-in {
+  animation: slide-up-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slide-down-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+}
+.animate-slide-down-out {
+  animation: slide-down-out 0.3s cubic-bezier(0.4, 0, 1, 1) both;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
@@ -639,4 +682,34 @@
 }
 .footer-credit:hover span {
   color: rgba(217, 29, 28, 0.4);
+}
+
+/* ===== DEVANAGARI FONT ===== */
+.font-devanagari {
+  font-family: var(--font-devanagari), "Noto Sans Devanagari", sans-serif;
+}
+
+/* ===== ACCESSIBILITY ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid rgba(217, 29, 28, 0.6);
+  outline-offset: 2px;
+}
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid rgba(217, 29, 28, 0.6);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

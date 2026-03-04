@@ -135,7 +135,9 @@ export function LyricCard({ lyric, cascadeIndex = 0 }: Props) {
           {displayLines.map((line, i) => (
             <p
               key={i}
-              className="text-[12px] text-white/80 leading-snug italic"
+              className={`text-[12px] text-white/80 leading-snug italic ${
+                hasDevanagari && !showRomanized ? "font-devanagari" : ""
+              }`}
             >
               {renderLine(line)}
             </p>

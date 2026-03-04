@@ -18,6 +18,23 @@ MC_NAME_MAP: dict[str, str] = {
     "epigram": "Epigram",
     "rawal": "Rawal",
     "seedhe maut": "Seedhe Maut",
+    "sez on the beat": "Sez on the Beat",
+    "sez": "Sez on the Beat",
+    "ab 17": "AB 17",
+    "mc stan": "MC Stan",
+    "prabh deep": "Prabh Deep",
+    "ahmer": "Ahmer",
+    "gravity": "Gravity",
+    "dakait": "Dakait",
+    "mohit edits": "Mohit",
+    "frappe ash": "Frappe Ash",
+    "jokhay": "Jokhay",
+    "talha anjum": "Talha Anjum",
+    "talha yunus": "Talha Yunus",
+    "young stunners": "Young Stunners",
+    "raftaar": "Raftaar",
+    "kr$na": "Kr$na",
+    "krsna": "Kr$na",
 }
 
 # Regex for section headers like [Verse 1: Encore ABJ], [Hook: Calm], [Bridge]

@@ -24,6 +24,19 @@ export interface LyricResult {
   score: number;
 }
 
+export interface RhymeWord {
+  word: string;
+  start_char: number;
+  end_char: number;
+  group: string;
+}
+
+export interface BarTiming {
+  bar_index: number;
+  start_ms: number;
+  end_ms: number;
+}
+
 export interface BarResult {
   id: string;
   song_id: string;
@@ -36,6 +49,9 @@ export interface BarResult {
   punchline_explanation: string | null;
   reference_target: string | null;
   rhyme_group: string | null;
+  rhyme_words: RhymeWord[] | null;
+  start_ms: number | null;
+  end_ms: number | null;
 }
 
 export interface SongDetail {

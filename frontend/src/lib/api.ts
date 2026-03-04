@@ -23,12 +23,6 @@ export async function sendChatMessage(
   return res.json();
 }
 
-export async function fetchSongDetail(songId: string) {
-  const res = await fetch(`${API_URL}/api/songs/${songId}`);
-  if (!res.ok) throw new Error(`Song API error: ${res.status}`);
-  return res.json();
-}
-
 export async function describeBar(barId: string) {
   const res = await fetch(`${API_URL}/api/songs/bars/${barId}/describe`, {
     method: "POST",
@@ -98,5 +92,32 @@ export async function matchAllSongsToSpotify(
 export async function getSongSpotifyInfo(songId: string) {
   const res = await fetch(`${API_URL}/api/spotify/track/${songId}`);
   if (!res.ok) throw new Error(`Spotify track error: ${res.status}`);
+  return res.json();
+}
+
+// --- Song detail + timing ---
+
+export async function fetchSongDetail(songId: string) {
+  const res = await fetch(`${API_URL}/api/songs/${songId}`);
+  if (!res.ok) throw new Error(`Song detail error: ${res.status}`);
+  return res.json();
+}
+
+export async function fetchSongTiming(
+  songId: string,
+  source: "estimated" | "synced" = "estimated"
+) {
+  const res = await fetch(
+    `${API_URL}/api/songs/${songId}/timing?source=${source}`
+  );
+  if (!res.ok) throw new Error(`Timing error: ${res.status}`);
+  return res.json();
+}
+
+export async function computeSongTiming(songId: string) {
+  const res = await fetch(`${API_URL}/api/songs/${songId}/compute-timing`, {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error(`Compute timing error: ${res.status}`);
   return res.json();
 }

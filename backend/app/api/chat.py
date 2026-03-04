@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from app.config import settings
 from app.ingestion.youtube_downloader import download_album_audio
-from app.mcp.tools.context import get_song_context
+from app.mcp.tools.context import describe_bar, get_song_context
 from app.mcp.tools.search import search_bars, search_by_lyrics, search_by_mood
 
 logger = logging.getLogger(__name__)
@@ -85,6 +85,17 @@ TOOL_DEFINITIONS = [
         },
     },
     {
+        "name": "describe_bar",
+        "description": "Get a detailed analysis of a specific bar/line — translation, meaning, wordplay, cultural references.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "bar_id": {"type": "string", "description": "UUID of the bar to describe"},
+            },
+            "required": ["bar_id"],
+        },
+    },
+    {
         "name": "download_album_audio",
         "description": "Download audio from a YouTube URL (video or playlist) and save as MP3s. Use when audio files are needed before analysis.",
         "input_schema": {
@@ -110,6 +121,7 @@ TOOL_HANDLERS = {
     "search_by_lyrics": search_by_lyrics,
     "search_bars": search_bars,
     "get_song_context": get_song_context,
+    "describe_bar": describe_bar,
     "download_album_audio": _download_audio_handler,
 }
 

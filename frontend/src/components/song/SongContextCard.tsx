@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import type { SongDetail } from "@/lib/types";
 import { getAlbumArt } from "@/lib/album-art";
+import { TOPIC_COLORS, formatDuration } from "@/lib/constants";
 import {
   Gauge,
   Piano,
@@ -14,32 +15,11 @@ import {
   ChevronDown,
   Users,
 } from "lucide-react";
+import { PlayButton } from "@/components/spotify/PlayButton";
 
 interface Props {
   song: SongDetail;
   cascadeIndex?: number;
-}
-
-const TOPIC_COLORS: Record<string, string> = {
-  "Hustle & Grind": "bg-amber-500/10 text-amber-400/90 border-amber-500/15",
-  Flex: "bg-emerald-500/10 text-emerald-400/90 border-emerald-500/15",
-  Introspection: "bg-blue-500/10 text-blue-400/90 border-blue-500/15",
-  "Diss & Competition": "bg-red-500/10 text-red-400/90 border-red-500/15",
-  Storytelling: "bg-purple-500/10 text-purple-400/90 border-purple-500/15",
-  "Social Commentary": "bg-cyan-500/10 text-cyan-400/90 border-cyan-500/15",
-  "Love & Relationships":
-    "bg-pink-500/10 text-pink-400/90 border-pink-500/15",
-  "Street Life": "bg-orange-500/10 text-orange-400/90 border-orange-500/15",
-  "Unity & Brotherhood":
-    "bg-teal-500/10 text-teal-400/90 border-teal-500/15",
-  "Party & Celebration":
-    "bg-yellow-500/10 text-yellow-400/90 border-yellow-500/15",
-};
-
-function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = Math.round(seconds % 60);
-  return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
 export function SongContextCard({ song, cascadeIndex = 0 }: Props) {
@@ -78,9 +58,12 @@ export function SongContextCard({ song, cascadeIndex = 0 }: Props) {
         </div>
 
         <div className="flex-1 min-w-0">
-          <h3 className="font-bold text-base text-white truncate">
-            {song.title}
-          </h3>
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-base text-white truncate">
+              {song.title}
+            </h3>
+            <PlayButton spotifyTrackId={song.spotify_track_id} size="md" />
+          </div>
           <p className="text-xs text-white/40 mt-0.5">
             {song.album_title}
             {song.track_number && (

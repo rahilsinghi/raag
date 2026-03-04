@@ -9,8 +9,8 @@ import { SongCard } from "@/components/song/SongCard";
 import { LyricCard } from "@/components/song/LyricCard";
 import { BarAnnotation } from "@/components/song/BarAnnotation";
 import { SongContextCard } from "@/components/song/SongContextCard";
-import type { SongResult, LyricResult, BarResult, SongDetail } from "@/lib/types";
-import { User, Music, Quote, Mic2, FileText } from "lucide-react";
+import type { SongResult, LyricResult, BarResult, SongDetail, BarDescription } from "@/lib/types";
+import { User, Music, Quote, Mic2, FileText, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 const TOOL_META: Record<string, { label: string; Icon: LucideIcon }> = {
@@ -18,6 +18,7 @@ const TOOL_META: Record<string, { label: string; Icon: LucideIcon }> = {
   search_by_lyrics: { label: "Lyrics found", Icon: Quote },
   search_bars: { label: "Bars", Icon: Mic2 },
   get_song_context: { label: "Song details", Icon: FileText },
+  describe_bar: { label: "Bar analysis", Icon: Sparkles },
 };
 
 function renderToolResult(result: ToolResult): ReactNode {
@@ -98,6 +99,56 @@ function renderToolResult(result: ToolResult): ReactNode {
       if (data && !Array.isArray(data)) {
         content = (
           <SongContextCard song={data as SongDetail} cascadeIndex={0} />
+        );
+      }
+      break;
+
+    case "describe_bar":
+      if (data && !Array.isArray(data)) {
+        const desc = data as BarDescription;
+        content = (
+          <div className="glass-card rounded-xl overflow-hidden border border-[#d91d1c]/10 animate-cascade-in">
+            <div className="px-4 py-3 space-y-2">
+              <p className="text-sm text-white/90 font-medium italic">
+                &ldquo;{desc.text}&rdquo;
+              </p>
+              {desc.translation && (
+                <p className="text-xs text-white/50 italic">
+                  {desc.translation}
+                </p>
+              )}
+              <p className="text-xs text-white/60 leading-relaxed">
+                {desc.meaning}
+              </p>
+              {desc.wordplay && (
+                <p className="text-xs text-white/45">
+                  <span className="text-emerald-400/70 font-semibold">Wordplay: </span>
+                  {desc.wordplay}
+                </p>
+              )}
+              {desc.cultural_references && desc.cultural_references.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {desc.cultural_references.map((ref, i) => (
+                    <span
+                      key={i}
+                      className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400/80 border border-amber-500/15"
+                    >
+                      {ref}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {desc.flow_notes && (
+                <p className="text-xs text-white/40">
+                  <span className="text-rose-400/70 font-semibold">Flow: </span>
+                  {desc.flow_notes}
+                </p>
+              )}
+              <p className="text-[10px] text-white/30 italic border-t border-white/[0.04] pt-2 mt-1">
+                {desc.tldr}
+              </p>
+            </div>
+          </div>
         );
       }
       break;

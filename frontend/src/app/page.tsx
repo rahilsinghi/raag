@@ -1,40 +1,57 @@
 "use client";
 
+import Image from "next/image";
 import { ChatContainer } from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChatStore } from "@/lib/store";
-import { Music2 } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 
 export default function Home() {
   const { messages, clearMessages } = useChatStore();
 
   return (
-    <main className="flex flex-col h-screen bg-background">
+    <main className="flex flex-col h-screen bg-background relative">
+      {/* Subtle background glow */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-[radial-gradient(ellipse_at_center,rgba(217,29,28,0.06)_0%,transparent_70%)]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(217,29,28,0.03)_0%,transparent_70%)]" />
+      </div>
+
       {/* Header */}
-      <header className="relative flex items-center justify-between px-6 py-3 border-b border-border/50 bg-card/50 backdrop-blur-sm">
+      <header className="relative z-10 flex items-center justify-between px-5 py-3 border-b border-white/[0.06] glass">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10 border border-primary/20">
-            <Music2 className="w-4 h-4 text-primary" />
+          <div className="relative w-8 h-8 rounded-full overflow-hidden ring-1 ring-white/10">
+            <Image
+              src="/logos/Artboard 4SM logos.png"
+              alt="SM"
+              fill
+              className="object-cover"
+            />
           </div>
-          <div>
-            <h1 className="text-base font-semibold tracking-tight text-foreground">
-              Raag
+          <div className="flex items-baseline gap-2">
+            <h1 className="font-maut text-base font-extrabold tracking-wider text-white">
+              RAAG
             </h1>
-            <p className="text-[10px] text-muted-foreground leading-none mt-0.5">
-              Artist Intelligence Engine
-            </p>
+            <span className="text-[10px] tracking-[0.2em] uppercase text-white/30 font-semibold">
+              Intelligence
+            </span>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-muted-foreground/70 bg-muted/50 px-2.5 py-1 rounded-full border border-border/50">
-            Seedhe Maut
-          </span>
+
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06]">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#d91d1c] animate-pulse" />
+            <span className="text-[11px] text-white/50 font-semibold tracking-wide uppercase">
+              Seedhe Maut
+            </span>
+          </div>
           {messages.length > 0 && (
             <button
               onClick={clearMessages}
-              className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
+              className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+              title="New conversation"
             >
-              Clear
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           )}
         </div>

@@ -1,12 +1,13 @@
 "use client";
 
+import Image from "next/image";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage as ChatMessageType } from "@/lib/api";
 import { SongCard } from "@/components/song/SongCard";
 import { BarAnnotation } from "@/components/song/BarAnnotation";
 import type { SongResult, BarResult } from "@/lib/types";
-import { Sparkles, User } from "lucide-react";
+import { User } from "lucide-react";
 
 interface Props {
   message: ChatMessageType;
@@ -18,13 +19,13 @@ export function ChatMessage({ message }: Props) {
   if (isUser) {
     return (
       <div className="flex items-start gap-3 justify-end animate-fade-in-up">
-        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-primary/15 border border-primary/20 px-4 py-2.5">
-          <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+        <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-white/[0.06] border border-white/[0.08] px-4 py-2.5">
+          <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
             {message.content}
           </p>
         </div>
-        <div className="w-7 h-7 rounded-lg bg-muted border border-border flex items-center justify-center shrink-0 mt-0.5">
-          <User className="w-3.5 h-3.5 text-muted-foreground" />
+        <div className="w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
+          <User className="w-3.5 h-3.5 text-white/40" />
         </div>
       </div>
     );
@@ -32,8 +33,13 @@ export function ChatMessage({ message }: Props) {
 
   return (
     <div className="flex items-start gap-3 animate-fade-in-up">
-      <div className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0 mt-0.5">
-        <Sparkles className="w-3.5 h-3.5 text-primary" />
+      <div className="relative w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10 shrink-0 mt-0.5">
+        <Image
+          src="/logos/Artboard 4SM logos.png"
+          alt="SM"
+          fill
+          className="object-cover"
+        />
       </div>
       <div className="flex-1 min-w-0">
         {/* Markdown content */}

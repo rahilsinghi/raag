@@ -122,6 +122,9 @@ class Bar(TimestampMixin, Base):
     punchline_explanation: Mapped[str | None] = mapped_column(Text, nullable=True)
     reference_target: Mapped[str | None] = mapped_column(Text, nullable=True)
     rhyme_group: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    rhyme_words: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    start_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    end_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
 
     song: Mapped["Song"] = relationship(back_populates="bars")

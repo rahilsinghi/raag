@@ -1,9 +1,14 @@
 import { create } from "zustand";
 import { toast } from "sonner";
-import { fetchGraphData, refreshGraphData } from "./api";
-import type { GraphNodeData, GraphEdgeData } from "./types";
+import { fetchGraphData, refreshGraphData, fetchSongDetail } from "./api";
+import type { GraphNodeData, GraphEdgeData, SongDetail } from "./types";
 
 export type ViewMode = "full" | "album_centric" | "mc_split" | "timeline";
+
+interface PanelHistoryEntry {
+  mode: "song" | "album";
+  nodeId: string;
+}
 
 interface UniverseStore {
   nodes: GraphNodeData[];
@@ -14,6 +19,16 @@ interface UniverseStore {
   selectedNode: GraphNodeData | null;
   hoveredNode: GraphNodeData | null;
   clickScreenPos: { x: number; y: number } | null;
+
+  // Panel state
+  panelOpen: boolean;
+  panelMode: "song" | "album" | null;
+  panelNodeId: string | null;
+  songDetail: SongDetail | null;
+  songDetailLoading: boolean;
+  panelHistory: PanelHistoryEntry[];
+  pendingZoomNodeId: string | null;
+
   fetchGraph: (params?: {
     view_mode?: string;
     album_id?: string;
@@ -24,6 +39,13 @@ interface UniverseStore {
   hoverNode: (node: GraphNodeData | null) => void;
   setViewMode: (mode: ViewMode) => void;
   setClickScreenPos: (pos: { x: number; y: number } | null) => void;
+
+  // Panel actions
+  openSongPanel: (nodeId: string) => Promise<void>;
+  openAlbumPanel: (nodeId: string) => void;
+  closePanel: () => void;
+  panelBack: () => void;
+  setPendingZoomNodeId: (id: string | null) => void;
 }
 
 export const useUniverseStore = create<UniverseStore>((set, get) => ({
@@ -35,6 +57,15 @@ export const useUniverseStore = create<UniverseStore>((set, get) => ({
   selectedNode: null,
   hoveredNode: null,
   clickScreenPos: null,
+
+  // Panel state
+  panelOpen: false,
+  panelMode: null,
+  panelNodeId: null,
+  songDetail: null,
+  songDetailLoading: false,
+  panelHistory: [],
+  pendingZoomNodeId: null,
 
   fetchGraph: async (params) => {
     set({ isLoading: true });
@@ -72,4 +103,98 @@ export const useUniverseStore = create<UniverseStore>((set, get) => ({
   hoverNode: (node) => set({ hoveredNode: node }),
   setViewMode: (mode) => set({ viewMode: mode }),
   setClickScreenPos: (pos) => set({ clickScreenPos: pos }),
+
+  openSongPanel: async (nodeId: string) => {
+    const { panelOpen, panelMode, panelNodeId } = get();
+    const history = [...get().panelHistory];
+    if (panelOpen && panelMode && panelNodeId) {
+      history.push({ mode: panelMode, nodeId: panelNodeId });
+    }
+    set({
+      panelOpen: true,
+      panelMode: "song",
+      panelNodeId: nodeId,
+      songDetail: null,
+      songDetailLoading: true,
+      panelHistory: history,
+    });
+    try {
+      const uuid = nodeId.replace(/^song-/, "");
+      const detail = await fetchSongDetail(uuid);
+      // Only update if still viewing this node
+      if (get().panelNodeId === nodeId) {
+        set({ songDetail: detail, songDetailLoading: false });
+      }
+    } catch (e) {
+      console.error("Failed to fetch song detail:", e);
+      if (get().panelNodeId === nodeId) {
+        set({ songDetailLoading: false });
+      }
+    }
+  },
+
+  openAlbumPanel: (nodeId: string) => {
+    const { panelOpen, panelMode, panelNodeId } = get();
+    const history = [...get().panelHistory];
+    if (panelOpen && panelMode && panelNodeId) {
+      history.push({ mode: panelMode, nodeId: panelNodeId });
+    }
+    set({
+      panelOpen: true,
+      panelMode: "album",
+      panelNodeId: nodeId,
+      songDetail: null,
+      songDetailLoading: false,
+      panelHistory: history,
+    });
+  },
+
+  closePanel: () => {
+    set({
+      panelOpen: false,
+      panelMode: null,
+      panelNodeId: null,
+      songDetail: null,
+      songDetailLoading: false,
+      panelHistory: [],
+      selectedNode: null,
+    });
+  },
+
+  panelBack: () => {
+    const history = [...get().panelHistory];
+    const prev = history.pop();
+    if (!prev) return;
+    set({ panelHistory: history });
+    // Re-open without pushing to history
+    if (prev.mode === "song") {
+      set({
+        panelMode: "song",
+        panelNodeId: prev.nodeId,
+        songDetail: null,
+        songDetailLoading: true,
+      });
+      const uuid = prev.nodeId.replace(/^song-/, "");
+      fetchSongDetail(uuid)
+        .then((detail) => {
+          if (get().panelNodeId === prev.nodeId) {
+            set({ songDetail: detail, songDetailLoading: false });
+          }
+        })
+        .catch(() => {
+          if (get().panelNodeId === prev.nodeId) {
+            set({ songDetailLoading: false });
+          }
+        });
+    } else {
+      set({
+        panelMode: "album",
+        panelNodeId: prev.nodeId,
+        songDetail: null,
+        songDetailLoading: false,
+      });
+    }
+  },
+
+  setPendingZoomNodeId: (id) => set({ pendingZoomNodeId: id }),
 }));

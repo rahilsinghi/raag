@@ -144,6 +144,11 @@ export function ForceGraph() {
   const fgRef = useRef<ForceGraphMethods<GraphNode, GraphLink> | undefined>(undefined);
   const { nodes, edges, selectNode, selectedNode, hoverNode } = useUniverseStore();
   const setClickScreenPos = useUniverseStore((s) => s.setClickScreenPos);
+  const openSongPanel = useUniverseStore((s) => s.openSongPanel);
+  const openAlbumPanel = useUniverseStore((s) => s.openAlbumPanel);
+  const closePanel = useUniverseStore((s) => s.closePanel);
+  const pendingZoomNodeId = useUniverseStore((s) => s.pendingZoomNodeId);
+  const setPendingZoomNodeId = useUniverseStore((s) => s.setPendingZoomNodeId);
 
   const graphData = useMemo(
     () => ({
@@ -195,6 +200,24 @@ export function ForceGraph() {
     });
   }, [graphData]);
 
+  // ── Pending zoom: watch for external navigation ─────────────────────────
+
+  useEffect(() => {
+    if (!pendingZoomNodeId) return;
+    const node = graphData.nodes.find((n) => n.id === pendingZoomNodeId);
+    if (!node || node.x === undefined) {
+      const t = setTimeout(() => setPendingZoomNodeId(pendingZoomNodeId), 500);
+      return () => clearTimeout(t);
+    }
+    const d = 90;
+    fgRef.current?.cameraPosition(
+      { x: node.x + d * 0.7, y: node.y! + d * 0.25, z: node.z! + d * 0.7 },
+      { x: node.x, y: node.y!, z: node.z! },
+      1200,
+    );
+    setPendingZoomNodeId(null);
+  }, [pendingZoomNodeId, graphData.nodes, setPendingZoomNodeId]);
+
   // ── Event handlers ────────────────────────────────────────────────────────
 
   const handleNodeClick = useCallback(
@@ -215,15 +238,14 @@ export function ForceGraph() {
         1200,
       );
 
-      // Project node position to screen coords after a short delay (post-zoom)
-      setTimeout(() => {
-        const fg2 = fgRef.current;
-        if (!fg2) return;
-        const coords = fg2.graph2ScreenCoords(node.x ?? 0, node.y ?? 0, node.z ?? 0);
-        setClickScreenPos({ x: coords.x, y: coords.y });
-      }, 1300);
+      // Open the appropriate side panel
+      if (node.type === "song") {
+        openSongPanel(node.id);
+      } else if (node.type === "album") {
+        openAlbumPanel(node.id);
+      }
     },
-    [selectNode, setClickScreenPos],
+    [selectNode, openSongPanel, openAlbumPanel],
   );
 
   const handleNodeHover = useCallback(
@@ -236,7 +258,8 @@ export function ForceGraph() {
 
   const handleBackgroundClick = useCallback(() => {
     if (selectedNode) selectNode(null);
-  }, [selectedNode, selectNode]);
+    closePanel();
+  }, [selectedNode, selectNode, closePanel]);
 
   // ── Node three object builder ─────────────────────────────────────────────
 

@@ -151,7 +151,7 @@ export const useSpotifyStore = create<SpotifyState>()(
         const { deviceId } = get();
         if (!token || !deviceId) return;
 
-        await fetch(
+        const resp = await fetch(
           `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
           {
             method: "PUT",
@@ -162,6 +162,10 @@ export const useSpotifyStore = create<SpotifyState>()(
             body: JSON.stringify({ uris: [spotifyUri] }),
           }
         );
+        if (!resp.ok) {
+          console.error("[Spotify] Play failed:", resp.status);
+          return;
+        }
         set({ isPlaying: true, currentTrackId: spotifyUri, currentSongDbId: songDbId ?? null });
       },
 

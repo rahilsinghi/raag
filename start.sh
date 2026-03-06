@@ -159,7 +159,7 @@ sleep 1
 
 # Start frontend
 log "Starting frontend..."
-(cd frontend && bun dev --experimental-https --experimental-https-key ../certs/key.pem --experimental-https-cert ../certs/cert.pem 2>&1 | sed 's/^/  [frontend] /') &
+(cd frontend && bun dev --experimental-https 2>&1 | sed 's/^/  [frontend] /') &
 FRONTEND_PID=$!
 
 # Wait for either to exit

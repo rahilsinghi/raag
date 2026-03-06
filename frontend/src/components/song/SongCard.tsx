@@ -2,10 +2,11 @@
 
 import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import type { SongResult, SongDetail } from "@/lib/types";
 import { TOPIC_COLORS } from "@/lib/constants";
-import { Gauge, Piano, Zap, Loader2 } from "lucide-react";
+import { Gauge, Piano, Zap, Loader2, Network } from "lucide-react";
 import { getAlbumArt } from "@/lib/album-art";
 import { fetchSongDetail } from "@/lib/api";
 import { SongDetailPanel } from "./SongDetailPanel";
@@ -23,6 +24,7 @@ export function SongCard({ song, rank, cascadeIndex = 0 }: Props) {
   const [loading, setLoading] = useState(false);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const energyPct = song.energy ? Math.round(song.energy * 100) : 0;
   const scorePct = Math.round(song.score * 100);
@@ -55,7 +57,16 @@ export function SongCard({ song, rank, cascadeIndex = 0 }: Props) {
     setExpanded(false);
   }, []);
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    // Don't trigger card expand when clicking play button
+    if ((e.target as HTMLElement).closest('button')) {
+      // Also cancel hover-expand timer so card doesn't open after play
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+        hoverTimerRef.current = null;
+      }
+      return;
+    }
     if (expanded) {
       setExpanded(false);
     } else {
@@ -110,11 +121,23 @@ export function SongCard({ song, rank, cascadeIndex = 0 }: Props) {
             <div className="flex-1 min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-sm text-white truncate">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <h4 className="font-bold text-sm text-white truncate min-w-0">
                       {song.title}
                     </h4>
-                    <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
+                    <div className="shrink-0 flex items-center gap-1">
+                      <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          router.push(`/universe?song=${song.id}`);
+                        }}
+                        className="w-6 h-6 rounded-full bg-white/[0.04] flex items-center justify-center text-white/25 hover:text-white/60 hover:bg-white/[0.08] transition-all duration-300"
+                        title="View in Universe"
+                      >
+                        <Network className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-white/40 mt-0.5">
                     {song.album_title}

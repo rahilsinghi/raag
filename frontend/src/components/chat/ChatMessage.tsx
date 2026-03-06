@@ -7,9 +7,10 @@ import remarkGfm from "remark-gfm";
 import type { ChatMessage as ChatMessageType, ToolResult } from "@/lib/api";
 import { SongCard } from "@/components/song/SongCard";
 import { LyricCard } from "@/components/song/LyricCard";
-import { BarAnnotation } from "@/components/song/BarAnnotation";
 import { SongContextCard } from "@/components/song/SongContextCard";
 import type { SongResult, LyricResult, BarResult, SongDetail, BarDescription } from "@/lib/types";
+import { MC_STYLES, ANNOTATION_STYLES } from "@/lib/constants";
+import { Badge } from "@/components/ui/badge";
 import { User, Music, Quote, Mic2, FileText, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -49,7 +50,7 @@ function renderToolResult(result: ToolResult): ReactNode {
     case "search_by_mood":
       if (items) {
         content = (
-          <div className="space-y-2.5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             {(items as SongResult[]).map((song, j) => (
               <SongCard
                 key={song.id || `song-${j}`}
@@ -81,15 +82,73 @@ function renderToolResult(result: ToolResult): ReactNode {
 
     case "search_bars":
       if (items) {
+        const bars = items as BarResult[];
+        // Group bars into chunks of 4
+        const chunks: BarResult[][] = [];
+        for (let i = 0; i < bars.length; i += 4) {
+          chunks.push(bars.slice(i, i + 4));
+        }
         content = (
           <div className="space-y-2">
-            {(items as BarResult[]).map((bar, j) => (
-              <BarAnnotation
-                key={bar.id || `bar-${j}`}
-                bar={bar}
-                cascadeIndex={j}
-              />
-            ))}
+            {chunks.map((chunk, ci) => {
+              const first = chunk[0];
+              const mc = MC_STYLES[first.mc ?? ""];
+              return (
+                <div
+                  key={`chunk-${ci}`}
+                  className={`rounded-lg border px-3 py-2.5 animate-cascade-in ${
+                    mc
+                      ? `${mc.border} ${mc.bg}`
+                      : "border-white/[0.04] bg-white/[0.01]"
+                  }`}
+                  style={{ animationDelay: `${ci * 0.06}s` }}
+                >
+                  {/* Header: section · song */}
+                  <div className="flex items-center gap-2 mb-1.5">
+                    {first.mc && mc && (
+                      <div className="flex items-center gap-1">
+                        <div className={`w-1.5 h-1.5 rounded-full ${mc.dot}`} />
+                        <span className={`text-[10px] font-semibold ${mc.text}`}>
+                          {first.mc}
+                        </span>
+                      </div>
+                    )}
+                    <span className="text-[10px] text-white/25">
+                      {first.section && `${first.section} · `}{first.song_title}
+                    </span>
+                  </div>
+                  {/* Bar lines */}
+                  <div className="space-y-0.5">
+                    {chunk.map((bar, bi) => (
+                      <div key={bar.id || `bar-${ci}-${bi}`} className="flex items-baseline gap-2">
+                        <p className="text-[13px] text-white/80 leading-snug">
+                          {bar.text}
+                        </p>
+                        {bar.annotations && bar.annotations.length > 0 && (
+                          <div className="flex gap-1 shrink-0">
+                            {bar.annotations.map((ann) => {
+                              const style = ANNOTATION_STYLES[ann];
+                              return (
+                                <Badge
+                                  key={ann}
+                                  className={`text-[8px] font-semibold border-0 px-1 py-0 h-3.5 ${
+                                    style
+                                      ? `${style.bg} ${style.text}`
+                                      : "bg-white/[0.05] text-white/40"
+                                  }`}
+                                >
+                                  {ann.replace(/_/g, " ")}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         );
       }

@@ -23,6 +23,82 @@ export async function sendChatMessage(
   return res.json();
 }
 
+export interface StreamCallbacks {
+  onTextDelta: (text: string) => void;
+  onToolStart: (toolName: string) => void;
+  onToolResult: (result: ToolResult) => void;
+  onDone: () => void;
+  onError: (message: string) => void;
+}
+
+export async function streamChatMessage(
+  messages: ChatMessage[],
+  callbacks: StreamCallbacks
+): Promise<void> {
+  const res = await fetch(`${API_URL}/api/chat/stream`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!res.ok) {
+    callbacks.onError(`Chat API error: ${res.status}`);
+    return;
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) {
+    callbacks.onError("No response body");
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (!line.startsWith("data: ")) continue;
+      const raw = line.slice(6).trim();
+      if (!raw) continue;
+
+      try {
+        const event = JSON.parse(raw);
+        switch (event.type) {
+          case "text_delta":
+            callbacks.onTextDelta(event.content);
+            break;
+          case "tool_start":
+            callbacks.onToolStart(event.toolName);
+            break;
+          case "tool_result":
+            callbacks.onToolResult({
+              toolName: event.toolName,
+              data: event.data,
+            });
+            break;
+          case "done":
+            callbacks.onDone();
+            return;
+          case "error":
+            callbacks.onError(event.message);
+            return;
+        }
+      } catch {
+        // skip malformed SSE lines
+      }
+    }
+  }
+
+  callbacks.onDone();
+}
+
 export async function describeBar(barId: string) {
   const res = await fetch(`${API_URL}/api/songs/bars/${barId}/describe`, {
     method: "POST",

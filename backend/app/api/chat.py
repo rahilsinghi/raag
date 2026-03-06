@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import time
+from collections.abc import AsyncGenerator
 
 import anthropic
 from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from app.config import settings
@@ -223,3 +226,108 @@ async def chat(request: ChatRequest) -> ChatResponse:
                 })
 
         messages.append({"role": "user", "content": tool_results_for_claude})
+
+
+def _sse(data: dict) -> str:
+    return f"data: {json.dumps(data, default=str)}\n\n"
+
+
+async def _stream_chat(messages: list[dict]) -> AsyncGenerator[str, None]:
+    client = anthropic.AsyncAnthropic(api_key=settings.anthropic_api_key)
+
+    conv: list[dict] = [
+        {"role": msg["role"], "content": msg["content"]} for msg in messages
+    ]
+
+    while True:
+        # Retry with backoff on rate limit
+        stream = None
+        for attempt in range(3):
+            try:
+                stream = client.messages.stream(
+                    model=settings.claude_model,
+                    max_tokens=4096,
+                    system=SYSTEM_PROMPT,
+                    tools=TOOL_DEFINITIONS,
+                    messages=conv,
+                )
+                break
+            except anthropic.RateLimitError:
+                if attempt < 2:
+                    wait = 2**attempt * 5
+                    logger.warning("Rate limited, retrying in %ds...", wait)
+                    await asyncio.sleep(wait)
+                else:
+                    yield _sse({"type": "error", "message": "Rate limited"})
+                    return
+
+        if stream is None:
+            yield _sse({"type": "error", "message": "Failed to connect to Claude"})
+            return
+
+        # Consume the stream, forwarding text deltas
+        async with stream as s:
+            async for event in s:
+                if event.type == "content_block_delta":
+                    if event.delta.type == "text_delta":
+                        yield _sse({"type": "text_delta", "content": event.delta.text})
+
+            response = await s.get_final_message()
+
+        # Check for tool use
+        tool_use_blocks = [b for b in response.content if b.type == "tool_use"]
+
+        if not tool_use_blocks:
+            yield _sse({"type": "done"})
+            return
+
+        # Execute tools and stream results
+        conv.append({"role": "assistant", "content": response.content})
+        tool_results_for_claude: list[dict] = []
+
+        for tool_block in tool_use_blocks:
+            tool_name = tool_block.name
+            yield _sse({"type": "tool_start", "toolName": tool_name})
+
+            handler = TOOL_HANDLERS.get(tool_name)
+            if handler:
+                try:
+                    result = await handler(**tool_block.input)
+                    yield _sse({"type": "tool_result", "toolName": tool_name, "data": result})
+                    tool_results_for_claude.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_block.id,
+                        "content": json.dumps(result, default=str),
+                    })
+                except Exception as e:
+                    logger.error("Tool %s failed: %s", tool_name, e)
+                    yield _sse({"type": "tool_result", "toolName": tool_name, "data": {"error": str(e)}})
+                    tool_results_for_claude.append({
+                        "type": "tool_result",
+                        "tool_use_id": tool_block.id,
+                        "content": json.dumps({"error": str(e)}),
+                        "is_error": True,
+                    })
+            else:
+                yield _sse({"type": "tool_result", "toolName": tool_name, "data": {"error": f"Unknown tool: {tool_name}"}})
+                tool_results_for_claude.append({
+                    "type": "tool_result",
+                    "tool_use_id": tool_block.id,
+                    "content": json.dumps({"error": f"Unknown tool: {tool_name}"}),
+                    "is_error": True,
+                })
+
+        conv.append({"role": "user", "content": tool_results_for_claude})
+        # Loop back to stream Claude's next response
+
+
+@router.post("/stream")
+async def chat_stream(request: ChatRequest):
+    return StreamingResponse(
+        _stream_chat(request.messages),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+        },
+    )

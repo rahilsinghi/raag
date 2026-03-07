@@ -5,7 +5,7 @@ import dynamic from "next/dynamic";
 import { useUniverseStore } from "@/lib/universe-store";
 import { UniverseHeader } from "@/components/universe/UniverseHeader";
 import { UniverseControls } from "@/components/universe/UniverseControls";
-import { NodeDetailPanel } from "@/components/universe/NodeDetailPanel";
+import { GraphSidePanel } from "@/components/universe/GraphSidePanel";
 import { TimelineView } from "@/components/universe/TimelineView";
 import { GraphLoadingSkeleton } from "@/components/universe/GraphLoadingSkeleton";
 import { SpotifySDK } from "@/components/spotify/SpotifySDK";
@@ -38,7 +38,7 @@ export default function UniversePage() {
       )}
 
       <UniverseControls />
-      <NodeDetailPanel />
+      <GraphSidePanel />
       <SpotifySDK />
       <SpotifyMiniPlayer />
     </main>

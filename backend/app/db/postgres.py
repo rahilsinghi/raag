@@ -35,6 +35,40 @@ class TimestampMixin:
     )
 
 
+class User(TimestampMixin, Base):
+    __tablename__ = "users"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    password_hash: Mapped[str] = mapped_column(Text, nullable=False)
+    display_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    preferences: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+
+class Conversation(TimestampMixin, Base):
+    __tablename__ = "conversations"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id: Mapped[uuid.UUID | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
+    title: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    metadata_: Mapped[dict | None] = mapped_column("metadata", JSONB, nullable=True)
+
+    messages: Mapped[list["Message"]] = relationship(back_populates="conversation", cascade="all, delete", order_by="Message.created_at")
+
+
+class Message(TimestampMixin, Base):
+    __tablename__ = "messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    conversation_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(20), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    tool_calls: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    tool_results: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+
+    conversation: Mapped["Conversation"] = relationship(back_populates="messages")
+
+
 class Artist(TimestampMixin, Base):
     __tablename__ = "artists"
 

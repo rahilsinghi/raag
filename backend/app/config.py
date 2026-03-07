@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     spotify_client_id: str = ""
     spotify_client_secret: str = ""
     spotify_redirect_uri: str = "https://127.0.0.1:3000/api/auth/callback/spotify"
+    jwt_secret: str = "change-me-in-production"
+    jwt_algorithm: str = "HS256"
+    jwt_access_expiry_minutes: int = 30
+    jwt_refresh_expiry_days: int = 7
 
     model_config = {"env_file": str(_ENV_FILE), "env_file_encoding": "utf-8"}
 

@@ -111,6 +111,31 @@ export interface GraphDataResponse {
   stats: Record<string, number>;
 }
 
+// --- Conversation types ---
+
+export interface ConversationSummary {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+  message_count: number;
+}
+
+export interface ConversationDetail {
+  id: string;
+  title: string | null;
+  created_at: string;
+  updated_at: string;
+  messages: {
+    id: string;
+    role: string;
+    content: string;
+    tool_calls: unknown;
+    tool_results: unknown;
+    created_at: string;
+  }[];
+}
+
 // --- Spotify types ---
 
 export interface SpotifyTrack {

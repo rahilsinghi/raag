@@ -151,17 +151,37 @@ export const useSpotifyStore = create<SpotifyState>()(
         const { deviceId } = get();
         if (!token || !deviceId) return;
 
-        const resp = await fetch(
-          `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
-          {
+        const playReq = async () =>
+          fetch(
+            `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
+            {
+              method: "PUT",
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ uris: [spotifyUri] }),
+            }
+          );
+
+        let resp = await playReq();
+
+        // 404 = device not active yet — transfer playback first, then retry
+        if (resp.status === 404) {
+          console.log("[Spotify] Transferring playback to device...");
+          await fetch("https://api.spotify.com/v1/me/player", {
             method: "PUT",
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({ uris: [spotifyUri] }),
-          }
-        );
+            body: JSON.stringify({ device_ids: [deviceId], play: false }),
+          });
+          // Brief wait for Spotify to register the transfer
+          await new Promise((r) => setTimeout(r, 500));
+          resp = await playReq();
+        }
+
         if (!resp.ok) {
           console.error("[Spotify] Play failed:", resp.status);
           return;

@@ -6,14 +6,20 @@ import { ChatContainer } from "@/components/chat/ChatContainer";
 import { ChatInput } from "@/components/chat/ChatInput";
 import { useChatStore } from "@/lib/store";
 import Link from "next/link";
-import { RotateCcw, Network } from "lucide-react";
+import { RotateCcw, Network, LogIn, PanelLeftOpen } from "lucide-react";
+import { ChatSidebar } from "@/components/chat/ChatSidebar";
 import { SpotifySDK } from "@/components/spotify/SpotifySDK";
 import { SpotifyCallback } from "@/components/spotify/SpotifyCallback";
 import { SpotifyMiniPlayer } from "@/components/spotify/SpotifyMiniPlayer";
 import { SpotifyLoginButton } from "@/components/spotify/SpotifyLoginButton";
+import { useAuthStore } from "@/lib/auth-store";
+import { LoginModal } from "@/components/auth/LoginModal";
+import { UserMenu } from "@/components/auth/UserMenu";
 
 export default function Home() {
-  const { messages, clearMessages } = useChatStore();
+  const { messages, clearMessages, newConversation, sidebarOpen, setSidebarOpen } = useChatStore();
+  const { isAuthenticated } = useAuthStore();
+  const [loginOpen, setLoginOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [preloaderDone, setPreloaderDone] = useState(false);
   const [mousePos, setMousePos] = useState({ x: -300, y: -300 });
@@ -98,6 +104,15 @@ export default function Home() {
       {/* Header */}
       <header className="relative z-10 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-white/[0.06] glass">
         <div className="flex items-center gap-3">
+          {isAuthenticated && !sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+              title="Chat history"
+            >
+              <PanelLeftOpen className="w-3.5 h-3.5" />
+            </button>
+          )}
           <div className="relative w-8 h-8 rounded-full overflow-hidden ring-1 ring-white/10">
             <Image
               src="/logos/Artboard 4SM logos.png"
@@ -133,26 +148,41 @@ export default function Home() {
           </div>
           {messages.length > 0 && (
             <button
-              onClick={clearMessages}
+              onClick={newConversation}
               className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
               title="New conversation"
             >
               <RotateCcw className="w-3.5 h-3.5" />
             </button>
           )}
+          {isAuthenticated ? (
+            <UserMenu />
+          ) : (
+            <button
+              onClick={() => setLoginOpen(true)}
+              className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+              title="Sign in"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Chat area */}
-      <ChatContainer />
-
-      {/* Input area */}
-      <ChatInput />
-
-      {/* Footer credit */}
-      <div className="relative z-10 footer-credit">
-        Powered by <span>Raag</span> Intelligence
+      {/* Chat area with optional sidebar */}
+      <div className="flex flex-1 min-h-0 relative z-10">
+        <ChatSidebar />
+        <div className="flex flex-col flex-1 min-w-0">
+          <ChatContainer />
+          <ChatInput />
+          <div className="footer-credit">
+            Powered by <span>Raag</span> Intelligence
+          </div>
+        </div>
       </div>
+
+      {/* Login modal */}
+      <LoginModal open={loginOpen} onClose={() => setLoginOpen(false)} />
     </main>
   );
 }

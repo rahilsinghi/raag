@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { ChatMessage as ChatMessageType, ToolResult } from "@/lib/api";
@@ -13,6 +14,8 @@ import { MC_STYLES, ANNOTATION_STYLES } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { User, Music, Quote, Mic2, FileText, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 const TOOL_META: Record<string, { label: string; Icon: LucideIcon }> = {
   search_by_mood: { label: "Matching tracks", Icon: Music },
@@ -83,7 +86,6 @@ function renderToolResult(result: ToolResult): ReactNode {
     case "search_bars":
       if (items) {
         const bars = items as BarResult[];
-        // Group bars into chunks of 4
         const chunks: BarResult[][] = [];
         for (let i = 0; i < bars.length; i += 4) {
           chunks.push(bars.slice(i, i + 4));
@@ -94,16 +96,17 @@ function renderToolResult(result: ToolResult): ReactNode {
               const first = chunk[0];
               const mc = MC_STYLES[first.mc ?? ""];
               return (
-                <div
+                <motion.div
                   key={`chunk-${ci}`}
-                  className={`rounded-lg border px-3 py-2.5 animate-cascade-in ${
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: ci * 0.06, ease }}
+                  className={`rounded-lg border px-3 py-2.5 ${
                     mc
                       ? `${mc.border} ${mc.bg}`
                       : "border-white/[0.04] bg-white/[0.01]"
                   }`}
-                  style={{ animationDelay: `${ci * 0.06}s` }}
                 >
-                  {/* Header: section · song */}
                   <div className="flex items-center gap-2 mb-1.5">
                     {first.mc && mc && (
                       <div className="flex items-center gap-1">
@@ -117,7 +120,6 @@ function renderToolResult(result: ToolResult): ReactNode {
                       {first.section && `${first.section} · `}{first.song_title}
                     </span>
                   </div>
-                  {/* Bar lines */}
                   <div className="space-y-0.5">
                     {chunk.map((bar, bi) => (
                       <div key={bar.id || `bar-${ci}-${bi}`} className="flex items-baseline gap-2">
@@ -146,7 +148,7 @@ function renderToolResult(result: ToolResult): ReactNode {
                       </div>
                     ))}
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -166,7 +168,12 @@ function renderToolResult(result: ToolResult): ReactNode {
       if (data && !Array.isArray(data)) {
         const desc = data as BarDescription;
         content = (
-          <div className="glass-card rounded-xl overflow-hidden border border-[#d91d1c]/10 animate-cascade-in">
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease }}
+            className="glass-card rounded-xl overflow-hidden border border-[#d91d1c]/10"
+          >
             <div className="px-4 py-3 space-y-2">
               <p className="text-sm text-white/90 font-medium italic">
                 &ldquo;{desc.text}&rdquo;
@@ -207,7 +214,7 @@ function renderToolResult(result: ToolResult): ReactNode {
                 {desc.tldr}
               </p>
             </div>
-          </div>
+          </motion.div>
         );
       }
       break;
@@ -230,13 +237,15 @@ interface Props {
 
 export function ChatMessage({ message, index = 0 }: Props) {
   const isUser = message.role === "user";
-  const staggerDelay = `${Math.min(index * 0.05, 0.3)}s`;
+  const delay = Math.min(index * 0.05, 0.3);
 
   if (isUser) {
     return (
-      <div
-        className="flex items-start gap-3 justify-end animate-fade-in-up"
-        style={{ animationDelay: staggerDelay }}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay, ease }}
+        className="flex items-start gap-3 justify-end"
       >
         <div className="max-w-[80%] rounded-2xl rounded-tr-sm bg-white/[0.06] border border-white/[0.08] px-4 py-2.5">
           <p className="text-sm text-white leading-relaxed whitespace-pre-wrap">
@@ -246,14 +255,16 @@ export function ChatMessage({ message, index = 0 }: Props) {
         <div className="w-7 h-7 rounded-full bg-white/[0.06] border border-white/[0.08] flex items-center justify-center shrink-0 mt-0.5">
           <User className="w-3.5 h-3.5 text-white/40" />
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
-    <div
-      className="flex items-start gap-3 animate-fade-in-up"
-      style={{ animationDelay: staggerDelay }}
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay, ease }}
+      className="flex items-start gap-3"
     >
       <div className="relative w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10 shrink-0 mt-0.5">
         <Image
@@ -278,6 +289,6 @@ export function ChatMessage({ message, index = 0 }: Props) {
           </div>
         ))}
       </div>
-    </div>
+    </motion.div>
   );
 }

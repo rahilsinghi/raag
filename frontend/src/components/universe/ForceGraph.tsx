@@ -163,7 +163,7 @@ export function ForceGraph() {
     [nodes, edges],
   );
 
-  // ── Scene setup: lighting + fog ───────────────────────────────────────────
+  // ── Scene setup: lighting + fog + starfield ──────────────────────────────
 
   useEffect(() => {
     const fg = fgRef.current;
@@ -184,6 +184,48 @@ export function ForceGraph() {
     scene.add(pt);
 
     scene.fog = new THREE.FogExp2(0x050505, 0.0012);
+
+    // Starfield background
+    if (!scene.getObjectByName("starfield")) {
+      const starCount = 2000;
+      const positions = new Float32Array(starCount * 3);
+      const sizes = new Float32Array(starCount);
+      for (let i = 0; i < starCount; i++) {
+        const r = 800 + Math.random() * 1200;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+        positions[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+        positions[i * 3 + 2] = r * Math.cos(phi);
+        sizes[i] = 0.5 + Math.random() * 1.5;
+      }
+      const starGeo = new THREE.BufferGeometry();
+      starGeo.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      starGeo.setAttribute("size", new THREE.BufferAttribute(sizes, 1));
+      const starMat = new THREE.PointsMaterial({
+        color: 0xffffff,
+        size: 0.8,
+        transparent: true,
+        opacity: 0.35,
+        sizeAttenuation: true,
+        depthWrite: false,
+      });
+      const stars = new THREE.Points(starGeo, starMat);
+      stars.name = "starfield";
+      scene.add(stars);
+    }
+  }, [graphData]);
+
+  // ── Auto-rotate when idle ───────────────────────────────────────────────
+
+  useEffect(() => {
+    const fg = fgRef.current;
+    if (!fg) return;
+    const controls = fg.controls();
+    if (controls && "autoRotate" in controls) {
+      (controls as { autoRotate: boolean; autoRotateSpeed: number }).autoRotate = true;
+      (controls as { autoRotate: boolean; autoRotateSpeed: number }).autoRotateSpeed = 0.3;
+    }
   }, [graphData]);
 
   // ── Forces ────────────────────────────────────────────────────────────────

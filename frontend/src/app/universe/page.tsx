@@ -6,6 +6,7 @@ import { useUniverseStore } from "@/lib/universe-store";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { UniverseControls } from "@/components/universe/UniverseControls";
 import { GraphSidePanel } from "@/components/universe/GraphSidePanel";
+import { NodeHoverCard } from "@/components/universe/NodeHoverCard";
 import { TimelineView } from "@/components/universe/TimelineView";
 import { GraphLoadingSkeleton } from "@/components/universe/GraphLoadingSkeleton";
 import { SpotifySDK } from "@/components/spotify/SpotifySDK";
@@ -40,6 +41,7 @@ export default function UniversePage() {
 
         <UniverseControls />
         <GraphSidePanel />
+        <NodeHoverCard />
       </div>
 
       <SpotifySDK />

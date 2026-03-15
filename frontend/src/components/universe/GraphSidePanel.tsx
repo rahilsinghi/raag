@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import {
   X,
@@ -29,6 +30,8 @@ import {
 } from "@/lib/constants";
 import { PlayButton } from "@/components/spotify/PlayButton";
 import type { SongDetail } from "@/lib/types";
+
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 /** Group bars by section for lyrics display */
 function groupBarsBySection(
@@ -78,74 +81,81 @@ export function GraphSidePanel() {
     return () => window.removeEventListener("keydown", handleKey);
   }, [panelOpen, closePanel]);
 
-  if (!panelOpen || !panelMode || !panelNodeId) return null;
-
   const currentNode = nodes.find((n) => n.id === panelNodeId);
+  const isOpen = panelOpen && panelMode && panelNodeId;
 
   return (
-    <div
-      className="fixed top-[49px] right-0 bottom-0 w-[380px] z-30 flex flex-col animate-slide-panel-in"
-      style={{
-        background: "rgba(8,8,8,0.95)",
-        backdropFilter: "blur(40px)",
-        WebkitBackdropFilter: "blur(40px)",
-        borderLeft: "1px solid rgba(255,255,255,0.06)",
-      }}
-    >
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
-        <div className="flex items-center gap-2">
-          {panelHistory.length > 0 && (
-            <button
-              onClick={panelBack}
-              className="p-1 rounded-md text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors"
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-          )}
-          <div className="flex items-center gap-1.5">
-            {panelMode === "song" ? (
-              <Music className="w-3.5 h-3.5 text-white/30" />
-            ) : (
-              <Disc3 className="w-3.5 h-3.5 text-[#d91d1c]/60" />
-            )}
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">
-              {panelMode === "song" ? "Song" : "Album"}
-            </span>
-          </div>
-        </div>
-        <button
-          onClick={closePanel}
-          className="p-1.5 rounded-md text-white/25 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ x: 380, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: 380, opacity: 0 }}
+          transition={{ duration: 0.4, ease }}
+          className="fixed top-[49px] right-0 bottom-0 w-[380px] z-30 flex flex-col"
+          style={{
+            background: "rgba(8,8,8,0.95)",
+            backdropFilter: "blur(40px)",
+            WebkitBackdropFilter: "blur(40px)",
+            borderLeft: "1px solid rgba(255,255,255,0.06)",
+          }}
         >
-          <X className="w-4 h-4" />
-        </button>
-      </div>
+          {/* Header */}
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+            <div className="flex items-center gap-2">
+              {panelHistory.length > 0 && (
+                <button
+                  onClick={panelBack}
+                  className="p-1 rounded-md text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              )}
+              <div className="flex items-center gap-1.5">
+                {panelMode === "song" ? (
+                  <Music className="w-3.5 h-3.5 text-white/30" />
+                ) : (
+                  <Disc3 className="w-3.5 h-3.5 text-[#d91d1c]/60" />
+                )}
+                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/30">
+                  {panelMode === "song" ? "Song" : "Album"}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={closePanel}
+              className="p-1.5 rounded-md text-white/25 hover:text-white/60 hover:bg-white/[0.06] transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
-      {/* Body */}
-      <div className="flex-1 overflow-y-auto">
-        {panelMode === "song" ? (
-          <SongPanelContent
-            songDetail={songDetail}
-            loading={songDetailLoading}
-            nodeId={panelNodeId}
-            node={currentNode}
-          />
-        ) : (
-          <AlbumPanelContent
-            nodeId={panelNodeId}
-            node={currentNode}
-            nodes={nodes}
-            edges={edges}
-            onTrackClick={(songNode) => {
-              selectNode(songNode);
-              setPendingZoomNodeId(songNode.id);
-              openSongPanel(songNode.id);
-            }}
-          />
-        )}
-      </div>
-    </div>
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto">
+            {panelMode === "song" ? (
+              <SongPanelContent
+                songDetail={songDetail}
+                loading={songDetailLoading}
+                nodeId={panelNodeId!}
+                node={currentNode}
+              />
+            ) : (
+              <AlbumPanelContent
+                nodeId={panelNodeId!}
+                node={currentNode}
+                nodes={nodes}
+                edges={edges}
+                onTrackClick={(songNode) => {
+                  selectNode(songNode);
+                  setPendingZoomNodeId(songNode.id);
+                  openSongPanel(songNode.id);
+                }}
+              />
+            )}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

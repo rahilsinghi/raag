@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useChatStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
 import {
@@ -10,6 +11,8 @@ import {
   X,
   Loader2,
 } from "lucide-react";
+
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -45,8 +48,6 @@ export function ChatSidebar() {
     }
   }, [isAuthenticated, sidebarOpen, loadConversations]);
 
-  if (!isAuthenticated || !sidebarOpen) return null;
-
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     setDeletingId(id);
@@ -54,8 +55,18 @@ export function ChatSidebar() {
     setDeletingId(null);
   };
 
+  const shouldShow = isAuthenticated && sidebarOpen;
+
   return (
-    <aside className="w-64 shrink-0 border-r border-white/[0.06] glass flex flex-col h-full z-20 relative animate-[slide-panel-in_0.2s_ease-out]">
+    <AnimatePresence>
+      {shouldShow && (
+    <motion.aside
+      initial={{ width: 0, opacity: 0 }}
+      animate={{ width: 256, opacity: 1 }}
+      exit={{ width: 0, opacity: 0 }}
+      transition={{ duration: 0.3, ease }}
+      className="shrink-0 border-r border-white/[0.06] glass flex flex-col h-full z-20 relative overflow-hidden"
+    >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-3 border-b border-white/[0.06]">
         <span className="text-xs font-semibold text-white/50 uppercase tracking-wider">
@@ -129,6 +140,8 @@ export function ChatSidebar() {
           })
         )}
       </div>
-    </aside>
+    </motion.aside>
+      )}
+    </AnimatePresence>
   );
 }

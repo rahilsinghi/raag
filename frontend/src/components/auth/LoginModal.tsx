@@ -1,8 +1,11 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth-store";
+
+const ease = [0.16, 1, 0.3, 1] as [number, number, number, number];
 
 interface LoginModalProps {
   open: boolean;
@@ -44,18 +47,28 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
     setError("");
   }, []);
 
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={onClose}
+          />
 
-      {/* Modal */}
-      <div className="relative z-10 w-full max-w-sm mx-4 glass-card rounded-2xl p-6 border border-white/[0.08]">
+          {/* Modal */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.35, ease }}
+            className="relative z-10 w-full max-w-sm mx-4 glass-card rounded-2xl p-6 border border-white/[0.08]"
+          >
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-1 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-colors"
@@ -126,7 +139,9 @@ export function LoginModal({ open, onClose }: LoginModalProps) {
             {mode === "login" ? "Sign up" : "Sign in"}
           </button>
         </p>
-      </div>
-    </div>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
   );
 }

@@ -10,6 +10,8 @@ import { PlayButton } from "@/components/spotify/PlayButton";
 import { Network } from "lucide-react";
 import { AnnotatedLyrics } from "./AnnotatedLyrics";
 import { SongSidebar } from "./SongSidebar";
+import { HeroBackground } from "./HeroBackground";
+import { PlaybackProgress } from "./PlaybackProgress";
 import { DeepDiveSkeleton } from "@/components/ui/glass-skeleton";
 import { FadeIn } from "@/components/transitions/FadeIn";
 import Link from "next/link";
@@ -158,30 +160,42 @@ export function SongDeepDive({ songId }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <AppHeader
+    <div className="flex flex-col h-full relative">
+      {/* Full-page ambient background from album art */}
+      <HeroBackground
+        albumArt={albumArt}
         songTitle={song.title}
-        songAlbum={song.album_title}
-        songAlbumArt={albumArt}
-        songTrackNumber={song.track_number}
-        isPlayingSong={isThisSongPlaying && isPlaying}
-        mode={mode}
-        onModeChange={setMode}
-        extraActions={
-          <>
-            <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
-            <Link
-              href={`/universe?song=${song.id}`}
-              className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all"
-              title="View in Universe"
-            >
-              <Network className="w-3.5 h-3.5" />
-            </Link>
-          </>
-        }
+        albumTitle={song.album_title || ""}
+        energy={song.energy}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      {/* Header with playback progress */}
+      <div className="relative z-10">
+        <AppHeader
+          songTitle={song.title}
+          songAlbum={song.album_title}
+          songAlbumArt={albumArt}
+          songTrackNumber={song.track_number}
+          isPlayingSong={isThisSongPlaying && isPlaying}
+          mode={mode}
+          onModeChange={setMode}
+          extraActions={
+            <>
+              <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
+              <Link
+                href={`/universe?song=${song.id}`}
+                className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all"
+                title="View in Universe"
+              >
+                <Network className="w-3.5 h-3.5" />
+              </Link>
+            </>
+          }
+        />
+        <PlaybackProgress isPlaying={isThisSongPlaying && isPlaying} />
+      </div>
+
+      <div className="flex-1 flex overflow-hidden relative z-10">
         {/* Main lyrics area */}
         <FadeIn className="flex-1 overflow-y-auto" delay={0.1}>
           <AnnotatedLyrics

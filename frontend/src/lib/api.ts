@@ -1,3 +1,5 @@
+import type { ConversationSummary, ConversationDetail } from "./types";
+
 export interface ChatMessage {
   role: "user" | "assistant";
   content: string;
@@ -179,8 +181,6 @@ export async function streamChatMessage(
 }
 
 // ---------- Conversations ----------
-
-import type { ConversationSummary, ConversationDetail } from "./types";
 
 export async function fetchConversations(
   token: string

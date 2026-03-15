@@ -2,11 +2,17 @@
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import type { SongDetail, BarDescription } from "@/lib/types";
-import { fetchSongDetail, fetchSongTiming } from "@/lib/api";
+import { fetchSongDetail, fetchSongTiming, describeBar } from "@/lib/api";
 import { useSpotifyStore } from "@/lib/spotify-store";
-import { SongDeepDiveHeader } from "./SongDeepDiveHeader";
+import { getAlbumArt } from "@/lib/album-art";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { PlayButton } from "@/components/spotify/PlayButton";
+import { Network } from "lucide-react";
 import { AnnotatedLyrics } from "./AnnotatedLyrics";
 import { SongSidebar } from "./SongSidebar";
+import { DeepDiveSkeleton } from "@/components/ui/glass-skeleton";
+import { FadeIn } from "@/components/transitions/FadeIn";
+import Link from "next/link";
 
 interface Props {
   songId: string;
@@ -19,10 +25,11 @@ export function SongDeepDive({ songId }: Props) {
   const [mode, setMode] = useState<"static" | "synced">("static");
   const [activeBarIndex, setActiveBarIndex] = useState(-1);
   const [describeCache, setDescribeCache] = useState<Record<string, BarDescription>>({});
+  const describeCacheRef = useRef(describeCache);
+  describeCacheRef.current = describeCache;
 
   const { isPlaying, getInterpolatedPosition, currentTrackId } = useSpotifyStore();
 
-  // Is this song currently playing?
   const isThisSongPlaying = useMemo(() => {
     if (!currentTrackId || !song?.spotify_track_id) return false;
     return currentTrackId === `spotify:track:${song.spotify_track_id}`;
@@ -58,7 +65,6 @@ export function SongDeepDive({ songId }: Props) {
   // Fetch synced timing when mode switches to synced
   useEffect(() => {
     if (mode !== "synced" || !song) return;
-    // Skip if bars already have timing
     if (song.bars.some((b) => b.start_ms != null)) return;
 
     let cancelled = false;
@@ -83,7 +89,7 @@ export function SongDeepDive({ songId }: Props) {
           };
         });
       } catch {
-        // Synced timing unavailable — stay with estimated or no timing
+        // Synced timing unavailable
       }
     })();
 
@@ -117,57 +123,67 @@ export function SongDeepDive({ songId }: Props) {
     return () => cancelAnimationFrame(rafId);
   }, [mode, isThisSongPlaying, isPlaying, song, getInterpolatedPosition]);
 
-  // Describe bar handler with caching
+  // Describe bar handler with caching — ref avoids recreating on every cache write
   const handleDescribe = useCallback(
     async (barId: string): Promise<BarDescription | null> => {
-      if (describeCache[barId]) return describeCache[barId];
+      if (describeCacheRef.current[barId]) return describeCacheRef.current[barId];
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/api/songs/bars/${barId}/describe`,
-          { method: "POST" }
-        );
-        if (!res.ok) return null;
-        const data = await res.json();
+        const data = await describeBar(barId);
         setDescribeCache((prev) => ({ ...prev, [barId]: data }));
         return data;
       } catch {
         return null;
       }
     },
-    [describeCache]
+    []
   );
 
+  const albumArt = song ? getAlbumArt(song.album_title || "") : null;
+
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-2 border-[#d91d1c]/30 border-t-[#d91d1c] rounded-full animate-spin" />
-          <span className="text-sm text-white/30">Loading song...</span>
-        </div>
-      </div>
-    );
+    return <DeepDiveSkeleton />;
   }
 
   if (error || !song) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-sm text-white/40">{error || "Song not found"}</p>
+      <div className="flex flex-col h-full">
+        <AppHeader />
+        <div className="flex-1 flex items-center justify-center">
+          <FadeIn blur>
+            <p className="text-sm text-white/40">{error || "Song not found"}</p>
+          </FadeIn>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col h-full">
-      <SongDeepDiveHeader
-        song={song}
+      <AppHeader
+        songTitle={song.title}
+        songAlbum={song.album_title}
+        songAlbumArt={albumArt}
+        songTrackNumber={song.track_number}
+        isPlayingSong={isThisSongPlaying && isPlaying}
         mode={mode}
         onModeChange={setMode}
-        isPlaying={isThisSongPlaying && isPlaying}
+        extraActions={
+          <>
+            <PlayButton spotifyTrackId={song.spotify_track_id} songId={song.id} size="sm" />
+            <Link
+              href={`/universe?song=${song.id}`}
+              className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all"
+              title="View in Universe"
+            >
+              <Network className="w-3.5 h-3.5" />
+            </Link>
+          </>
+        }
       />
 
       <div className="flex-1 flex overflow-hidden">
         {/* Main lyrics area */}
-        <div className="flex-1 overflow-y-auto">
+        <FadeIn className="flex-1 overflow-y-auto" delay={0.1}>
           <AnnotatedLyrics
             song={song}
             activeBarIndex={activeBarIndex}
@@ -175,12 +191,16 @@ export function SongDeepDive({ songId }: Props) {
             describeCache={describeCache}
             mode={mode}
           />
-        </div>
+        </FadeIn>
 
         {/* Sidebar */}
-        <div className="hidden lg:block w-[340px] shrink-0 border-l border-white/[0.06] overflow-y-auto">
+        <FadeIn
+          className="hidden lg:block w-[340px] shrink-0 border-l border-white/[0.06] overflow-y-auto"
+          direction="right"
+          delay={0.2}
+        >
           <SongSidebar song={song} />
-        </div>
+        </FadeIn>
       </div>
     </div>
   );

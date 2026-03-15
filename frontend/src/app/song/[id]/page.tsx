@@ -13,7 +13,7 @@ export default function SongPage({
   const { id } = use(params);
 
   return (
-    <main className="h-screen w-screen bg-[#050505] overflow-hidden">
+    <main className="h-screen w-screen bg-[#050505] overflow-hidden flex flex-col">
       <SongDeepDive songId={id} />
       <SpotifySDK />
       <SpotifyMiniPlayer />

@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useChatStore } from "@/lib/store";
 import { ChatMessage } from "./ChatMessage";
+import { TypingIndicator } from "./TypingIndicator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Mic, MessageSquare, Flame } from "lucide-react";
 import { FEATURED_ALBUMS, ALBUM_ART } from "@/lib/album-art";
@@ -35,7 +36,7 @@ const SUGGESTIONS = [
 const CAROUSEL_ALBUMS = [...FEATURED_ALBUMS, ...FEATURED_ALBUMS];
 
 export function ChatContainer() {
-  const { messages, isLoading, sendMessage } = useChatStore();
+  const { messages, isLoading, activeToolName, sendMessage } = useChatStore();
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -118,26 +119,7 @@ export function ChatContainer() {
               <ChatMessage key={index} message={message} index={index} />
             ))}
 
-            {isLoading && (
-              <div className="flex items-start gap-3 animate-fade-in-up">
-                <div className="relative w-7 h-7 rounded-full overflow-hidden ring-1 ring-white/10 shrink-0 mt-0.5">
-                  <Image
-                    src="/logos/Artboard 4SM logos.png"
-                    alt="SM"
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <div className="flex items-center gap-3 pt-1.5">
-                  <div className="flex gap-1">
-                    <span className="w-1.5 h-1.5 bg-[#d91d1c] rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    <span className="w-1.5 h-1.5 bg-[#d91d1c]/70 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                    <span className="w-1.5 h-1.5 bg-[#d91d1c]/40 rounded-full animate-bounce" />
-                  </div>
-                  <span className="text-xs text-white/25">Analyzing...</span>
-                </div>
-              </div>
-            )}
+            {isLoading && <TypingIndicator toolName={activeToolName} />}
 
             <div ref={bottomRef} className="h-4" />
           </div>

@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useUniverseStore } from "@/lib/universe-store";
-import { UniverseHeader } from "@/components/universe/UniverseHeader";
+import { AppHeader } from "@/components/layout/AppHeader";
 import { UniverseControls } from "@/components/universe/UniverseControls";
 import { GraphSidePanel } from "@/components/universe/GraphSidePanel";
 import { TimelineView } from "@/components/universe/TimelineView";
@@ -24,21 +24,24 @@ export default function UniversePage() {
   }, [fetchGraph]);
 
   return (
-    <main className="h-screen w-screen bg-[#050505] overflow-hidden relative">
-      <UniverseHeader />
+    <main className="h-screen w-screen bg-[#050505] overflow-hidden relative flex flex-col">
+      <AppHeader />
 
-      {isLoading && nodes.length === 0 && <GraphLoadingSkeleton />}
+      <div className="flex-1 relative overflow-hidden">
+        {isLoading && nodes.length === 0 && <GraphLoadingSkeleton />}
 
-      {viewMode === "timeline" ? (
-        <TimelineView />
-      ) : (
-        <div className="w-full h-full">
-          <ForceGraph />
-        </div>
-      )}
+        {viewMode === "timeline" ? (
+          <TimelineView />
+        ) : (
+          <div className="w-full h-full">
+            <ForceGraph />
+          </div>
+        )}
 
-      <UniverseControls />
-      <GraphSidePanel />
+        <UniverseControls />
+        <GraphSidePanel />
+      </div>
+
       <SpotifySDK />
       <SpotifyMiniPlayer />
     </main>

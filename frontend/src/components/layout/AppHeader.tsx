@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ArrowLeft,
   Music,
+  Disc3,
 } from "lucide-react";
 import { useChatStore } from "@/lib/store";
 import { useAuthStore } from "@/lib/auth-store";
@@ -40,6 +41,7 @@ interface AppHeaderProps {
 const subtitleMap: Record<string, string> = {
   "/": "Intelligence",
   "/universe": "Universe",
+  "/discography": "Discography",
 };
 
 export function AppHeader({
@@ -62,8 +64,9 @@ export function AppHeader({
   const isChat = pathname === "/";
   const isUniverse = pathname === "/universe";
   const isDeepDive = pathname.startsWith("/song/");
+  const isDiscography = pathname.startsWith("/discography");
 
-  const subtitle = isDeepDive ? null : subtitleMap[pathname] ?? "Intelligence";
+  const subtitle = isDeepDive ? null : subtitleMap[pathname] ?? (isDiscography ? "Discography" : "Intelligence");
 
   const handleBack = useCallback(() => {
     if (window.history.length > 1) {
@@ -78,8 +81,8 @@ export function AppHeader({
       <header className="relative z-30 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-white/[0.06] glass">
         {/* Left section */}
         <div className="flex items-center gap-3 min-w-0">
-          {/* Back button for deep dive */}
-          {isDeepDive && (
+          {/* Back button for deep dive and album detail pages */}
+          {(isDeepDive || (isDiscography && pathname !== "/discography")) && (
             <motion.button
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
@@ -181,6 +184,13 @@ export function AppHeader({
           {isChat && (
             <>
               <Link
+                href="/discography"
+                className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+                title="Discography"
+              >
+                <Disc3 className="w-3.5 h-3.5" />
+              </Link>
+              <Link
                 href="/universe"
                 className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
                 title="Universe Map"
@@ -223,6 +233,25 @@ export function AppHeader({
                   className={`w-3.5 h-3.5 ${graphLoading ? "animate-spin" : ""}`}
                 />
               </button>
+              <Link
+                href="/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-[11px] text-white/50 font-semibold tracking-wide uppercase hover:bg-white/[0.06] hover:text-white/70 transition-all duration-300"
+              >
+                <MessageSquare className="w-3 h-3" />
+                Chat
+              </Link>
+            </>
+          )}
+
+          {isDiscography && (
+            <>
+              <Link
+                href="/universe"
+                className="p-2 rounded-lg text-white/30 hover:text-white/70 hover:bg-white/[0.04] transition-all duration-300"
+                title="Universe Map"
+              >
+                <Network className="w-3.5 h-3.5" />
+              </Link>
               <Link
                 href="/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.06] text-[11px] text-white/50 font-semibold tracking-wide uppercase hover:bg-white/[0.06] hover:text-white/70 transition-all duration-300"
